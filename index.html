@@ -31,16 +31,6 @@
       const [search, setSearch] = React.useState("");
       const [filter, setFilter] = React.useState("all");
 
-      const handleLogin = (e) => {
-        e.preventDefault();
-        if (passwordInput === CORRECT_PASSWORD) {
-          sessionStorage.setItem("fop_auth", "true");
-          setIsAuthenticated(true);
-        } else {
-          setErrorMsg(true);
-        }
-      };
-
       const fetchSheetData = async () => {
         try {
           const response = await fetch(API_URL);
@@ -53,6 +43,18 @@
           console.error("Ошибка синхронизации:", e);
         } finally {
           setLoading(false);
+        }
+      };
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        if (passwordInput === CORRECT_PASSWORD) {
+          sessionStorage.setItem("fop_auth", "true");
+          setIsAuthenticated(true);
+          setLoading(true);
+          fetchSheetData(); // Сразу запускаем загрузку данных при входе
+        } else {
+          setErrorMsg(true);
         }
       };
 
