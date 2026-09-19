@@ -35,7 +35,7 @@
         try {
           const response = await fetch(API_URL);
           const result = await response.json();
-          if (result.status === "success" && result.data) {
+          if (result && result.status === "success" && Array.isArray(result.data)) {
             setFops(result.data);
             setLastSync(new Date().toLocaleTimeString());
           }
@@ -51,8 +51,6 @@
         if (passwordInput === CORRECT_PASSWORD) {
           sessionStorage.setItem("fop_auth", "true");
           setIsAuthenticated(true);
-          setLoading(true);
-          fetchSheetData(); // Сразу запускаем загрузку данных при входе
         } else {
           setErrorMsg(true);
         }
@@ -60,6 +58,7 @@
 
       React.useEffect(() => {
         if (isAuthenticated) {
+          setLoading(true);
           fetchSheetData();
           const interval = setInterval(fetchSheetData, 15000);
           return () => clearInterval(interval);
@@ -95,7 +94,7 @@
       }
 
       const processed = React.useMemo(() => {
-        return fops.map(fop => {
+        return (fops || []).map(fop => {
           const turnover = Number(fop.turnover) || 0;
           const pct = Math.min(100, Number(((turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
           const remaining = ANNUAL_LIMIT - turnover;
@@ -174,6 +173,8 @@
 
               {loading ? (
                 <div className="text-center py-12 text-slate-400 text-sm">Загрузка данных...</div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 text-sm">Ничего не найдено</div>
               ) : (
                 <div className="space-y-3">
                   {filtered.map(f => (
