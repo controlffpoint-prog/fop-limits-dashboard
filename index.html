@@ -14,40 +14,37 @@
 
   <script type="text/babel">
     const ANNUAL_LIMIT = 6672000;
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1mKg2IIYbNauWYe7UC7TI5dKW70rvALAMxzOpdQGqnFQ/edit?gid=2035595072#gid=2035595072";
-
-    const initialFops = [
-      { id: 1, name: "ФОП ЛІТВІНОВА ЛІЛІЯ ВІКТОРІВНА", inn: "2848013968", banks: "ПУМБ, УКРГАЗ, НОВАПЕЙ", turnover: 3647295 },
-      { id: 2, name: "ФОП Гоц Георгій Олександрович", inn: "3665109659", banks: "НОВАПЕЙ, ПРИВАТ", turnover: 5930814, status: "pause", statusDate: "01.07" },
-      { id: 3, name: "ФОП Постольний Євгеній Віталійович", inn: "3565711577", banks: "НОВАПЕЙ, УКРСІБ", turnover: 6105651 },
-      { id: 4, name: "ФОП Левченко Анастасія Миколаївна", inn: "3506907965", banks: "НОВАПЕЙ, МОНО", turnover: 4479652 },
-      { id: 5, name: "ФОП Литвинова Вікторія Вікторівна", inn: "3489120192", banks: "НОВАПЕЙ", turnover: 6418076, status: "pause", statusDate: "15.08" },
-      { id: 6, name: "ФОП РУДЕНКО АРТЕМ АНДРІЙОВИЧ", inn: "3391029384", banks: "НОВАПЕЙ", turnover: 6732079 },
-      { id: 7, name: "ФОП ЛЕВЧЕНКО ЄВГЕНІЙ ОЛЕКСАНДРОВИЧ", inn: "3291039481", banks: "НОВАПЕЙ, МОНО", turnover: 5796898 },
-      { id: 8, name: "ФОП КЛАДОВ ОЛЕКСІЙ ВІКТОРОВИЧ", inn: "3102938475", banks: "НОВАПЕЙ", turnover: 4980542 },
-      { id: 9, name: "ФОП МІЩЕНКО ИГОР ВАЛЕРІЙОВИЧ", inn: "3491029381", banks: "НОВАПЕЙ", turnover: 6322823 },
-      { id: 10, name: "ФОП МИРОНЕНКО АНДРІЙ СЕРГІЙОВИЧ", inn: "3201928374", banks: "НОВАПЕЙ", turnover: 4315638 },
-      { id: 11, name: "ФОП ПОСТОЛЬНА ОЛЬГА", inn: "3245678901", banks: "НОВАПЕЙ", turnover: 3135657 },
-      { id: 12, name: "ФОП Гайдаш Михайло Олександрович", inn: "3356789012", banks: "НОВАПЕЙ", turnover: 4591097 },
-      { id: 13, name: "ФОП Морозова Олена Олександрівна", inn: "3578901234", banks: "НОВАПЕЙ", turnover: 4361594 },
-      { id: 14, name: "ФОП Шкірман Валерія Вікторівна", inn: "3467890123", banks: "НОВАПЕЙ", turnover: 3208139 },
-      { id: 15, name: "ФОП ДЕНИСЮК СЕРГІЙ ЮРІЙОВИЧ", inn: "3689012345", banks: "НОВАПЕЙ", turnover: 3029455 },
-      { id: 16, name: "ФОП ТКАЧЕНКО", inn: "3790123456", banks: "НОВАПЕЙ", turnover: 1500000 },
-      { id: 17, name: "ФОП ГОНЧАРОВА", inn: "3801234567", banks: "НОВАПЕЙ", turnover: 1250000 },
-      { id: 18, name: "ФОП ВЕРЕТЕЛЬНИК МАРІЯ ВАЛЕРІЇВНА", inn: "3912345678", banks: "НОВАПЕЙ", turnover: 1020050 },
-      { id: 19, name: "ФОП Карпенко Олексій Юрійович", inn: "3923456789", banks: "НОВАПЕЙ", turnover: 3661814 },
-      { id: 20, name: "ФОП Харченко Владислав Русланович", inn: "3934567890", banks: "НОВАПЕЙ, УКРСІБ", turnover: 2357288 },
-      { id: 21, name: "ФОП Левченко Максим Олександрович", inn: "3945678901", banks: "НОВАПЕЙ", turnover: 215046 },
-      { id: 22, name: "ФОП Коваленко", inn: "3956789012", banks: "НОВАПЕЙ", turnover: 840000 },
-      { id: 23, name: "ФОП Шевченко", inn: "3967890123", banks: "НОВАПЕЙ", turnover: 450000 }
-    ];
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1mKg2IIYbNauWYe7UC7TI5dKW70rvALAMxzOpdQGqnFQ/edit?pli=1&gid=2035595072#gid=2035595072";
+    
+    // Вставьте сюда вашу ссылку на веб-приложение Apps Script:
+    const APPS_SCRIPT_URL = "ВАША_ССЫЛКА_ИЗ_APPS_SCRIPT_ЗДЕСЬ";
 
     function App() {
+      const [fops, setFops] = React.useState([]);
+      const [loading, setLoading] = React.useState(true);
       const [search, setSearch] = React.useState("");
       const [filter, setFilter] = React.useState("all");
 
+      const fetchData = async () => {
+        try {
+          const res = await fetch(APPS_SCRIPT_URL);
+          const data = await res.json();
+          setFops(data);
+          setLoading(false);
+        } catch (err) {
+          console.error("Ошибка загрузки:", err);
+          setLoading(false);
+        }
+      };
+
+      React.useEffect(() => {
+        fetchData();
+        const interval = setInterval(fetchData, 15000); // Проверять обновление каждые 15 секунд
+        return () => clearInterval(interval);
+      }, []);
+
       const processed = React.useMemo(() => {
-        return initialFops.map(fop => {
+        return fops.map(fop => {
           const pct = Math.min(100, Number(((fop.turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
           const remaining = ANNUAL_LIMIT - fop.turnover;
           let cat = "safe", label = "Запас", badge = "bg-emerald-50 text-emerald-700 border-emerald-200", bar = "bg-emerald-500";
@@ -56,7 +53,7 @@
           else if (pct >= 70) { cat = "watch"; label = "следить"; badge = "bg-amber-50 text-amber-600 border-amber-200"; bar = "bg-amber-400"; }
           return { ...fop, pct, remaining, cat, label, badge, bar };
         });
-      }, []);
+      }, [fops]);
 
       const totalTurnover = processed.reduce((a, b) => a + b.turnover, 0);
       const totalFree = processed.length * ANNUAL_LIMIT - totalTurnover;
@@ -68,95 +65,4 @@
 
       const fmt = v => v >= 1000000 ? (v / 1000000).toFixed(1).replace(".", ",") + " млн" : new Intl.NumberFormat("ru-RU").format(v) + " ₴";
 
-      return (
-        <div className="flex min-h-screen">
-          <aside className="w-64 bg-white border-r border-slate-200 p-6 hidden md:block">
-            <div className="font-bold text-xl text-slate-900 mb-8 flex items-center gap-2">
-              <span className="w-7 h-7 bg-blue-600 text-white rounded flex items-center justify-center text-xs">F</span>
-              FOP Limits
-            </div>
-            <nav className="space-y-2 text-sm font-medium text-slate-600">
-              <div className="p-2.5 bg-slate-100 text-blue-600 rounded-lg">Дашборд</div>
-            </nav>
-          </aside>
-
-          <main className="flex-1 p-6 md:p-10 max-w-7xl">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Дашборд</h1>
-                <p className="text-xs text-slate-400 mt-1">Доход 2026 • Лимит 2 группы: 6,67 млн ₴</p>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Синхронизировано
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div className="text-xs text-slate-400">В красной зоне</div>
-                <div className="text-3xl font-bold text-red-500 mt-1">{processed.filter(f => f.cat === "critical").length}</div>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div className="text-xs text-slate-400">Доход сети</div>
-                <div className="text-3xl font-bold text-slate-900 mt-1">{fmt(totalTurnover)}</div>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div className="text-xs text-slate-400">Свободный запас</div>
-                <div className="text-3xl font-bold text-slate-900 mt-1">{fmt(totalFree)}</div>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div className="text-xs text-slate-400">Всего ФОП</div>
-                <div className="text-3xl font-bold text-slate-900 mt-1">{processed.length}</div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-              <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-                <div className="flex gap-1 bg-slate-100 p-1 rounded-lg text-xs font-medium overflow-x-auto">
-                  {["all", "critical", "high", "watch", "safe"].map(t => (
-                    <button key={t} onClick={() => setFilter(t)} className={`px-3 py-1.5 rounded-md whitespace-nowrap ${filter === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-600"}`}>
-                      {t === "all" ? "Все" : t === "critical" ? "Критично" : t === "high" ? "Высокий риск" : t === "watch" ? "Следить" : "Запас"}
-                    </button>
-                  ))}
-                </div>
-                <input type="text" placeholder="Поиск ФОП..." value={search} onChange={e => setSearch(e.target.value)} className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg outline-none w-full md:w-64" />
-              </div>
-
-              <div className="space-y-3">
-                {filtered.map(f => (
-                  <div key={f.id} className="p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-200 transition">
-                    <div className="md:w-1/3">
-                      <div className="font-semibold text-sm text-slate-900">{f.name}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">ИНН {f.inn} • {f.banks}</div>
-                    </div>
-                    <div className="md:w-1/3">
-                      <div className="relative w-full h-7 bg-slate-100 rounded-lg overflow-hidden flex items-center px-3 justify-between">
-                        <div className={`absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-lg`} style={{ width: `${f.pct}%` }}></div>
-                        <span className="relative z-10 text-[11px] font-medium text-slate-700">остаток {new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴ {f.status === "pause" && `• пауза с ${f.statusDate}`}</span>
-                        <span className="relative z-10 text-xs font-bold text-slate-800">{f.pct}%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 justify-between md:justify-end">
-                      <span className={`text-[11px] font-medium px-2.5 py-1 rounded-md border ${f.badge}`}>{f.label}</span>
-                      <a 
-                        href={SHEET_URL} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition shadow-sm"
-                      >
-                        <span>Таблица</span>
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </main>
-        </div>
-      );
-    }
-
-    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
-</body>
-</html>
+---
