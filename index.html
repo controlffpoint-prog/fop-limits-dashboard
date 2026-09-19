@@ -17,34 +17,8 @@
     const CSV_URL = "https://docs.google.com/spreadsheets/d/1mKg2IIYbNauWYe7UC7TI5dKW70rvALAMxzOpdQGqnFQ/gviz/tq?tqx=out:csv&gid=2035595072";
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1mKg2IIYbNauWYe7UC7TI5dKW70rvALAMxzOpdQGqnFQ/edit?gid=2035595072#gid=2035595072";
 
-    const defaultFops = [
-      { id: 1, name: "ФОП ЛІТВІНОВА ЛІЛІЯ ВІКТОРІВНА", inn: "2848013968", banks: "ПУМБ, УКРГАЗ, НОВАПЕЙ", turnover: 3647295 },
-      { id: 2, name: "ФОП Гоц Георгій Олександрович", inn: "3665109659", banks: "НОВАПЕЙ, ПРИВАТ", turnover: 5930814, status: "pause", statusDate: "01.07" },
-      { id: 3, name: "ФОП Постольний Євгеній Віталійович", inn: "3565711577", banks: "НОВАПЕЙ, УКРСІБ", turnover: 6105651 },
-      { id: 4, name: "ФОП Левченко Анастасія Миколаївна", inn: "3506907965", banks: "НОВАПЕЙ, МОНО", turnover: 4479652 },
-      { id: 5, name: "ФОП Литвинова Вікторія Вікторівна", inn: "3489120192", banks: "НОВАПЕЙ", turnover: 6418076, status: "pause", statusDate: "15.08" },
-      { id: 6, name: "ФОП РУДЕНКО АРТЕМ АНДРІЙОВИЧ", inn: "3391029384", banks: "НОВАПЕЙ", turnover: 6732079 },
-      { id: 7, name: "ФОП ЛЕВЧЕНКО ЄВГЕНІЙ ОЛЕКСАНДРОВИЧ", inn: "3291039481", banks: "НОВАПЕЙ, МОНО", turnover: 5796898 },
-      { id: 8, name: "ФОП КЛАДОВ ОЛЕКСІЙ ВІКТОРОВИЧ", inn: "3102938475", banks: "НОВАПЕЙ", turnover: 4980542 },
-      { id: 9, name: "ФОП МІЩЕНКО ИГОР ВАЛЕРІЙОВИЧ", inn: "3491029381", banks: "НОВАПЕЙ", turnover: 6322823 },
-      { id: 10, name: "ФОП МИРОНЕНКО АНДРІЙ СЕРГІЙОВИЧ", inn: "3201928374", banks: "НОВАПЕЙ", turnover: 4315638 },
-      { id: 11, name: "ФОП ПОСТОЛЬНА ОЛЬГА", inn: "3245678901", banks: "НОВАПЕЙ", turnover: 3135657 },
-      { id: 12, name: "ФОП Гайдаш Михайло Олександрович", inn: "3356789012", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 13, name: "ФОП ШКІРМАН", inn: "3467890123", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 14, name: "ФОП МОРОЗОВА", inn: "3578901234", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 15, name: "ФОП ДЕНИСЮК", inn: "3689012345", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 16, name: "ФОП ТКАЧЕНКО", inn: "3790123456", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 17, name: "ФОП ГОНЧАРОВА", inn: "3801234567", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 18, name: "ФОП ВЕРЕТЕЛЬНИК", inn: "3912345678", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 19, name: "ФОП Карпенко", inn: "3923456789", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 20, name: "ФОП Харченко Владислав Русланович", inn: "3934567890", banks: "УКРСІБ", turnover: 0 },
-      { id: 21, name: "ФОП Власенко", inn: "3945678901", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 22, name: "ФОП Коваленко", inn: "3956789012", banks: "НОВАПЕЙ", turnover: 0 },
-      { id: 23, name: "ФОП Шевченко", inn: "3967890123", banks: "НОВАПЕЙ", turnover: 0 }
-    ];
-
     function App() {
-      const [fops, setFops] = React.useState(defaultFops);
+      const [fops, setFops] = React.useState([]);
       const [synced, setSynced] = React.useState(false);
       const [search, setSearch] = React.useState("");
       const [filter, setFilter] = React.useState("all");
@@ -53,36 +27,46 @@
         fetch(CSV_URL)
           .then(res => res.text())
           .then(text => {
-            const lines = text.split("\n");
-            const updated = [...defaultFops];
-            
-            lines.forEach(line => {
-              const cols = line.split('","').map(c => c.replace(/"/g, ''));
-              cols.forEach((colText, idx) => {
-                if (colText.includes("ФОП")) {
-                  // Ищем итоговое число в текущей строке
-                  let foundTurnover = 0;
-                  cols.forEach(val => {
-                    const cleanVal = parseFloat(String(val).replace(/\s+/g, '').replace(',', '.').replace('грн.', ''));
-                    if (!isNaN(cleanVal) && cleanNumValid(cleanVal)) {
-                      if (cleanVal > foundTurnover) foundTurnover = cleanVal;
-                    }
-                  });
+            const rows = text.split("\n").map(r => r.split('","').map(c => c.replace(/"/g, '').trim()));
+            const parsedFops = [];
+            let currentFopName = "";
 
-                  const targetIndex = updated.findIndex(f => colText.toLowerCase().includes(f.name.toLowerCase().replace("фоп", "").trim()));
-                  if (targetIndex !== -1 && foundTurnover > 0) {
-                    updated[targetIndex].turnover = foundTurnover;
+            rows.forEach((row) => {
+              // Сканируем ячейки на наличие ФОП / Фамилии в начале блоков
+              const possibleName = row.find(c => c.length > 3 && !c.includes("Торгівля") && !c.includes("Реклама") && !c.includes("ВСЬОГО") && !c.includes("РАЗОМ") && !c.includes("Дата реєстрації") && !c.match(/^\d+$/));
+              
+              if (possibleName && (possibleName.includes("ФОП") || possibleName.includes("ВЕРЕТЕЛЬНИК") || possibleName.includes("Карпенко") || possibleName.includes("Харченко") || possibleName.includes("Левченко") || possibleName.includes("Гайдаш"))) {
+                currentFopName = possibleName;
+              }
+
+              // Если нашли строку "РАЗОМ" — берем ее итоговую сумму
+              if (row.some(c => c.includes("РАЗОМ") || c.includes("ВСЬОГО")) && currentFopName) {
+                let turnover = 0;
+                row.forEach(val => {
+                  const cleanVal = parseFloat(String(val).replace(/\s+/g, '').replace(',', '.').replace('грн.', ''));
+                  if (!isNaN(cleanVal) && cleanVal > turnover) {
+                    turnover = cleanVal;
                   }
+                });
+
+                if (!parsedFops.some(f => f.name === currentFopName)) {
+                  parsedFops.push({
+                    id: parsedFops.length + 1,
+                    name: currentFopName,
+                    inn: "—",
+                    banks: "НОВАПЕЙ",
+                    turnover: turnover
+                  });
                 }
-              });
+              }
             });
 
-            function cleanNumValid(n) { return n > 1000 && n < 10000000; }
-
-            setFops(updated);
-            setSynced(true);
+            if (parsedFops.length > 0) {
+              setFops(parsedFops);
+              setSynced(true);
+            }
           })
-          .catch(err => console.log("Работаем в автономном режиме:", err));
+          .catch(err => console.error("Ошибка загрузки:", err));
       }, []);
 
       const processed = React.useMemo(() => {
@@ -101,7 +85,7 @@
       const totalFree = processed.length * ANNUAL_LIMIT - totalTurnover;
 
       const filtered = processed.filter(f => {
-        const m = f.name.toLowerCase().includes(search.toLowerCase()) || (f.inn && f.inn.includes(search));
+        const m = f.name.toLowerCase().includes(search.toLowerCase());
         return filter === "all" ? m : m && f.cat === filter;
       });
 
@@ -167,12 +151,12 @@
                   <div key={f.id} className="p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-200 transition">
                     <div className="md:w-1/3">
                       <div className="font-semibold text-sm text-slate-900">{f.name}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">ИНН {f.inn} • {f.banks}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">Оборот: {new Intl.NumberFormat("ru-RU").format(f.turnover)} ₴</div>
                     </div>
                     <div className="md:w-1/3">
                       <div className="relative w-full h-7 bg-slate-100 rounded-lg overflow-hidden flex items-center px-3 justify-between">
                         <div className={`absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-lg`} style={{ width: `${f.pct}%` }}></div>
-                        <span className="relative z-10 text-[11px] font-medium text-slate-700">остаток {new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴ {f.status === "pause" && `• пауза с ${f.statusDate}`}</span>
+                        <span className="relative z-10 text-[11px] font-medium text-slate-700">остаток {new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴</span>
                         <span className="relative z-10 text-xs font-bold text-slate-800">{f.pct}%</span>
                       </div>
                     </div>
