@@ -15,9 +15,7 @@
   <script type="text/babel">
     const ANNUAL_LIMIT = 6672000;
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1mKg2IIYbNauWYe7UC7TI5dKW70rvALAMxzOpdQGqnFQ/edit?pli=1&gid=2035595072#gid=2035595072";
-    
-    // Сюда вы уже вставили или вставите вашу ссылку на Apps Script:
-    const APPS_SCRIPT_URL = "ВАША_ССЫЛКА_ИЗ_APPS_SCRIPT_ЗДЕСЬ";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzbg3Qy3l7z8eUF2XXf2T3DHImaOAjRxyjovaZtqCpEN0C6y800J7lE-tLy_Cjw1ko/exec";
 
     function App() {
       const [fops, setFops] = React.useState([]);
@@ -39,7 +37,7 @@
 
       React.useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 15000);
+        const interval = setInterval(fetchData, 10000); // Синхронизация каждые 10 секунд
         return () => clearInterval(interval);
       }, []);
 
@@ -85,7 +83,7 @@
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 
-                {loading ? "Загрузка..." : "Синхронизировано в реальном времени"}
+                {loading ? "Загрузка из таблицы..." : "Синхронизировано в реальном времени"}
               </div>
             </div>
 
@@ -121,7 +119,7 @@
               </div>
 
               {loading ? (
-                <div className="text-center py-12 text-slate-400 text-sm">Загрузка данных из таблицы...</div>
+                <div className="text-center py-12 text-slate-400 text-sm">Загрузка данных из таблицы в реальном времени...</div>
               ) : (
                 <div className="space-y-3">
                   {filtered.map(f => (
