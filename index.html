@@ -4,19 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FOP Limits</title>
-
 <style>
 *{box-sizing:border-box}
-
 body{
     margin:0;
     font-family:Arial,Helvetica,sans-serif;
     background:#f6f7f9;
     color:#20242b
 }
-
 .app{display:flex;min-height:100vh}
-
 .sidebar{
     width:210px;
     background:#fff;
@@ -27,13 +23,11 @@ body{
     top:0;
     bottom:0
 }
-
 .logo{
     font-size:16px;
     font-weight:800;
     padding:8px 10px 25px
 }
-
 .menu{
     padding:11px 12px;
     margin:3px 0;
@@ -41,18 +35,15 @@ body{
     color:#777d87;
     font-size:13px
 }
-
 .menu.active{
     background:#eef1f5;
     color:#20242b;
     font-weight:bold
 }
-
 .main{
     margin-left:210px;
     width:calc(100% - 210px)
 }
-
 .topbar{
     height:58px;
     background:white;
@@ -62,7 +53,6 @@ body{
     justify-content:space-between;
     padding:0 28px
 }
-
 .top-search{
     width:260px;
     height:34px;
@@ -72,12 +62,10 @@ body{
     outline:none;
     font-size:12px
 }
-
 .online{
     font-size:11px;
     color:#7d838c
 }
-
 .green-dot{
     display:inline-block;
     width:7px;
@@ -86,35 +74,29 @@ body{
     border-radius:50%;
     margin-right:6px
 }
-
 .green-dot.error{
     background:#df4141
 }
-
 .content{
     max-width:1200px;
     margin:auto;
     padding:25px 28px 50px
 }
-
 h1{
     margin:0;
     font-size:23px
 }
-
 .subtitle{
     margin-top:5px;
     color:#999;
     font-size:11px
 }
-
 .stats{
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:10px;
     margin:20px 0
 }
-
 .stat{
     background:white;
     border:1px solid #e7e9ed;
@@ -122,35 +104,29 @@ h1{
     padding:16px;
     min-height:90px
 }
-
 .stat-title{
     color:#90959d;
     font-size:10px;
     margin-bottom:10px
 }
-
 .stat-value{
     font-size:24px;
     font-weight:800
 }
-
 .stat.red .stat-value{color:#df4141}
 .stat.yellow .stat-value{color:#c58a16}
 .stat.green .stat-value{color:#27995b}
-
 .stat-note{
     margin-top:7px;
     color:#aaa;
     font-size:9px
 }
-
 .panel{
     background:white;
     border:1px solid #e7e9ed;
     border-radius:14px;
     overflow:hidden
 }
-
 .panel-header{
     padding:16px 18px;
     border-bottom:1px solid #e7e9ed;
@@ -159,19 +135,16 @@ h1{
     align-items:center;
     gap:10px
 }
-
 .panel-title{
     font-size:14px;
     font-weight:800
 }
-
 .controls{
     display:flex;
     gap:6px;
     align-items:center;
     flex-wrap:wrap
 }
-
 button,select,.list-search{
     height:30px;
     border:1px solid #e1e4e8;
@@ -182,18 +155,15 @@ button,select,.list-search{
     color:#777d87;
     cursor:pointer
 }
-
 button.active{
     background:#eef1f5;
     color:#20242b;
     font-weight:bold
 }
-
 .list-search{
     width:150px;
     outline:none
 }
-
 .legend{
     padding:9px 18px;
     border-bottom:1px solid #eee;
@@ -202,40 +172,33 @@ button.active{
     display:flex;
     gap:16px
 }
-
 .legend span{
     display:inline-flex;
     align-items:center;
     gap:5px
 }
-
 .dot{
     width:7px;
     height:7px;
     border-radius:50%;
     display:inline-block
 }
-
 .dot.green{background:#31b86b}
 .dot.yellow{background:#f2b233}
 .dot.red{background:#df4141}
-
 .row{
     padding:14px 18px;
     border-bottom:1px solid #f0f1f3
 }
-
 .row:last-child{
     border-bottom:0
 }
-
 .row-main{
     display:grid;
     grid-template-columns:230px 1fr 75px;
     gap:18px;
     align-items:center
 }
-
 .name{
     font-size:12px;
     font-weight:800;
@@ -243,30 +206,25 @@ button.active{
     overflow:hidden;
     text-overflow:ellipsis
 }
-
 .meta{
     font-size:9px;
     color:#a0a5ac;
     margin-top:4px
 }
-
 .bar-bg{
     height:9px;
     background:#eceef1;
     border-radius:20px;
     overflow:hidden
 }
-
 .bar{
     height:100%;
     border-radius:20px;
     transition:width .4s
 }
-
 .bar.green{background:#31b86b}
 .bar.yellow{background:#f2b233}
 .bar.red{background:#df4141}
-
 .info-line{
     display:flex;
     justify-content:space-between;
@@ -274,17 +232,14 @@ button.active{
     font-size:9px;
     color:#999
 }
-
 .percent{
     text-align:right;
     font-size:16px;
     font-weight:900
 }
-
 .percent.green{color:#27995b}
 .percent.yellow{color:#c58a16}
 .percent.red{color:#d53b3b}
-
 .bottom{
     display:flex;
     justify-content:space-between;
@@ -292,11 +247,9 @@ button.active{
     font-size:9px;
     color:#999
 }
-
 .remaining.green{color:#27995b}
 .remaining.yellow{color:#c58a16}
 .remaining.red{color:#d53b3b;font-weight:bold}
-
 .error{
     display:none;
     background:#fff0f0;
@@ -307,14 +260,12 @@ button.active{
     margin-bottom:15px;
     font-size:11px
 }
-
 .empty{
     text-align:center;
     padding:40px;
     color:#999;
     font-size:12px
 }
-
 @media(max-width:900px){
     .sidebar{display:none}
     .main{
@@ -325,7 +276,6 @@ button.active{
         grid-template-columns:repeat(2,1fr)
     }
 }
-
 @media(max-width:600px){
     .topbar{padding:0 12px}
     .top-search{width:180px}
@@ -344,179 +294,124 @@ button.active{
 }
 </style>
 </head>
-
 <body>
-
 <div class="app">
-
 <aside class="sidebar">
-
     <div class="logo">
         FOP Limits
     </div>
-
     <div class="menu active">
         ▦ &nbsp; Дашборд
     </div>
-
     <div class="menu">
         ◉ &nbsp; ФОП
     </div>
-
     <div class="menu">
         ▥ &nbsp; Статистика
     </div>
-
     <div class="menu">
         ⚙ &nbsp; Налаштування
     </div>
-
 </aside>
-
-
 <main class="main">
-
 <header class="topbar">
-
     <input
         id="topSearch"
         class="top-search"
         placeholder="Найти ФОП..."
     >
-
     <div class="online">
         <span
             id="dot"
             class="green-dot"
         ></span>
-
         <span id="status">
             Синхронізація...
         </span>
     </div>
-
 </header>
-
-
 <div class="content">
-
     <div>
         <h1>Дашборд</h1>
-
         <div class="subtitle">
             Контроль доходів ФОП за 2026 рік
         </div>
     </div>
-
-
     <div
         id="error"
         class="error"
     ></div>
-
-
     <div class="stats">
-
         <div class="stat">
-
             <div class="stat-title">
                 Всього ФОП
             </div>
-
             <div
                 id="count"
                 class="stat-value"
             >
                 —
             </div>
-
             <div class="stat-note">
                 дані з Google Sheets
             </div>
-
         </div>
-
-
         <div class="stat">
-
             <div class="stat-title">
                 Загальний дохід
             </div>
-
             <div
                 id="total"
                 class="stat-value"
             >
                 —
             </div>
-
             <div class="stat-note">
                 по всіх ФОП
             </div>
-
         </div>
-
-
         <div class="stat green">
-
             <div class="stat-title">
                 Загальний запас
             </div>
-
             <div
                 id="free"
                 class="stat-value"
             >
                 —
             </div>
-
             <div class="stat-note">
                 по всіх ФОП
             </div>
-
         </div>
-
-
         <div class="stat red">
-
             <div class="stat-title">
                 Червона зона
             </div>
-
             <div
                 id="redCount"
                 class="stat-value"
             >
                 —
             </div>
-
             <div class="stat-note">
                 ліміт 6 672 000 грн
             </div>
-
         </div>
-
     </div>
-
-
     <section class="panel">
-
         <div class="panel-header">
-
             <div class="panel-title">
                 Ліміти по ФОП
             </div>
-
             <div class="controls">
-
                 <button
                     class="filter active"
                     data-filter="all"
                 >
                     Всі
-                    <span id="allCount">23</span>
+                    <span id="allCount">0</span>
                 </button>
-
                 <button
                     class="filter"
                     data-filter="red"
@@ -524,7 +419,6 @@ button.active{
                     🔴 Червона
                     <span id="redNumber">0</span>
                 </button>
-
                 <button
                     class="filter"
                     data-filter="yellow"
@@ -532,7 +426,6 @@ button.active{
                     🟡 Увага
                     <span id="yellowNumber">0</span>
                 </button>
-
                 <button
                     class="filter"
                     data-filter="green"
@@ -540,100 +433,65 @@ button.active{
                     🟢 Норма
                     <span id="greenNumber">0</span>
                 </button>
-
                 <select id="sort">
                     <option value="percent">
                         % ліміту ↓
                     </option>
-
                     <option value="income">
                         Дохід ↓
                     </option>
-
                     <option value="name">
                         ФІО А–Я
                     </option>
                 </select>
-
                 <input
                     id="search"
                     class="list-search"
                     placeholder="Пошук..."
                 >
-
             </div>
-
         </div>
-
-
         <div class="legend">
-
             <span>
                 <i class="dot green"></i>
                 запас більше 2 млн
             </span>
-
             <span>
                 <i class="dot yellow"></i>
                 запас 2 млн або менше
             </span>
-
             <span>
                 <i class="dot red"></i>
                 ліміт досягнуто
             </span>
-
         </div>
-
-
         <div id="list">
-
             <div class="empty">
                 Завантаження...
             </div>
-
         </div>
-
     </section>
-
 </div>
-
 </main>
-
 </div>
-
-
 <script>
-
 /* ================================
    НАСТРОЙКИ
 ================================ */
-
 const API =
-"https://script.google.com/macros/s/AKfycbyX4JrbmO2ZdOQbIiWYqDWHPsuLiljkBgEzLRhV-mGLrNCsF4Y-4z23eAGcOwhAAYRL/exec?token=my-secure-fop-token-2026";
-
+"https://script.google.com/macros/s/AKfycbx0puxAsWIGXKDH3HBEZ9IZxOWcJqnMpA1TqrOIvXt_emPEYJpwTNRVxI1sW1WKU7k6/exec?token=my-secure-fop-token-2026";
 const LIMIT = 6672000;
-
 const YELLOW = 2000000;
-
 const REFRESH = 3000;
-
-
 /* ================================
    ДАННЫЕ
 ================================ */
-
 let fops = [];
-
 let currentFilter = "all";
-
-
 /* ================================
    ФОРМАТ
 ================================ */
-
 function money(value){
-
     return new Intl.NumberFormat(
         "uk-UA",
         {
@@ -642,75 +500,47 @@ function money(value){
     ).format(
         Number(value) || 0
     ) + " грн";
-
 }
-
-
 /* ================================
    ПРОЦЕНТ
 ================================ */
-
 function percent(value){
-
     return (
         Number(value || 0) /
         LIMIT *
         100
     );
-
 }
-
-
 /* ================================
    ЦВЕТ
 ================================ */
-
 function zone(value){
-
     const remaining =
         LIMIT - Number(value || 0);
-
     if(remaining <= 0){
-
         return "red";
-
     }
-
     if(remaining <= YELLOW){
-
         return "yellow";
-
     }
-
     return "green";
-
 }
-
-
 /* ================================
    ЗАЩИТА HTML
 ================================ */
-
 function safe(text){
-
     return String(text || "")
         .replace(/&/g,"&amp;")
         .replace(/</g,"&lt;")
         .replace(/>/g,"&gt;")
         .replace(/"/g,"&quot;")
         .replace(/'/g,"&#039;");
-
 }
-
-
 /* ================================
    ЗАГРУЗКА GOOGLE SHEETS
 ================================ */
-
 async function load(){
-
     try{
-
         const response =
             await fetch(
                 API +
@@ -720,80 +550,53 @@ async function load(){
                     cache:"no-store"
                 }
             );
-
-
         if(!response.ok){
-
             throw new Error(
                 "HTTP " +
                 response.status
             );
-
         }
-
-
         const result =
             await response.json();
-
-
         console.log(
             "GOOGLE SHEETS:",
             result
         );
-
-
         if(
             result.status !==
             "success"
         ){
-
             throw new Error(
                 result.error ||
                 "Ошибка API"
             );
-
         }
-
-
         fops =
             result.data.map(
                 function(item){
-
                     return {
-
                         name:
                             String(
                                 item.name ||
                                 "ФОП"
                             ),
-
                         turnover:
                             Number(
                                 item.turnover ||
                                 0
                             )
-
                     };
-
                 }
             );
-
-
         update();
-
-
         document
             .getElementById("error")
             .style.display =
             "none";
-
-
         document
             .getElementById("dot")
             .classList
             .remove("error");
-
-
         document
             .getElementById("status")
             .textContent =
@@ -802,165 +605,101 @@ async function load(){
                 .toLocaleTimeString(
                     "uk-UA"
                 );
-
-
     }
     catch(error){
-
         console.error(error);
-
-
         document
             .getElementById("dot")
             .classList
             .add("error");
-
-
         document
             .getElementById("status")
             .textContent =
             "Помилка синхронізації";
-
-
         const box =
             document.getElementById(
                 "error"
             );
-
-
         box.style.display =
             "block";
-
-
         box.textContent =
             "Не вдалося отримати дані:\n" +
             error.message;
-
     }
-
 }
-
-
 /* ================================
    ОБНОВЛЕНИЕ
 ================================ */
-
 function update(){
-
     let total = 0;
-
     let red = 0;
-
     let yellow = 0;
-
     let green = 0;
-
-
     fops.forEach(
         function(fop){
-
             total += fop.turnover;
-
             const z =
                 zone(
                     fop.turnover
                 );
-
             if(z === "red"){
                 red++;
             }
-
             if(z === "yellow"){
                 yellow++;
             }
-
             if(z === "green"){
                 green++;
             }
-
         }
     );
-
-
-    /*
-     * Общий запас =
-     * лимит каждого ФОП
-     * минус его доход.
-     */
-
     const free =
         Math.max(
             0,
             LIMIT * fops.length -
             total
         );
-
-
     document
         .getElementById("count")
         .textContent =
         fops.length;
-
-
     document
         .getElementById("total")
         .textContent =
         compact(total);
-
-
     document
         .getElementById("free")
         .textContent =
         compact(free);
-
-
     document
         .getElementById("redCount")
         .textContent =
         red;
-
-
     document
         .getElementById("allCount")
         .textContent =
         fops.length;
-
-
     document
         .getElementById("redNumber")
         .textContent =
         red;
-
-
     document
         .getElementById("yellowNumber")
         .textContent =
         yellow;
-
-
     document
         .getElementById("greenNumber")
         .textContent =
         green;
-
-
     render();
-
 }
-
-
 /* ================================
    КОРОТКИЕ МЛН
 ================================ */
-
 function compact(value){
-
     value =
         Number(value) || 0;
-
-
     if(value >= 1000000){
-
         return (
             value /
             1000000
@@ -968,21 +707,13 @@ function compact(value){
         .toFixed(1)
         .replace(".",",") +
         " млн";
-
     }
-
-
     return money(value);
-
 }
-
-
 /* ================================
    РЕНДЕР
 ================================ */
-
 function render(){
-
     const search =
         (
             document
@@ -990,63 +721,46 @@ function render(){
                     "search"
                 )
                 .value ||
-
             document
                 .getElementById(
                     "topSearch"
                 )
                 .value ||
-
             ""
         )
         .toLowerCase()
         .trim();
-
-
     let data =
         fops.filter(
             function(fop){
-
                 const matchSearch =
                     fop.name
                         .toLowerCase()
                         .includes(
                             search
                         );
-
-
                 const matchFilter =
                     currentFilter ===
                     "all" ||
-
                     zone(
                         fop.turnover
                     ) ===
                     currentFilter;
-
-
                 return (
                     matchSearch &&
                     matchFilter
                 );
-
             }
         );
-
-
     const sort =
         document
             .getElementById(
                 "sort"
             )
             .value;
-
-
     if(sort === "percent"){
-
         data.sort(
             function(a,b){
-
                 return (
                     percent(
                         b.turnover
@@ -1055,47 +769,30 @@ function render(){
                         a.turnover
                     )
                 );
-
             }
         );
-
     }
-
-
     if(sort === "income"){
-
         data.sort(
             function(a,b){
-
                 return (
                     b.turnover -
                     a.turnover
                 );
-
             }
         );
-
     }
-
-
     if(sort === "name"){
-
         data.sort(
             function(a,b){
-
                 return a.name.localeCompare(
                     b.name,
                     "uk"
                 );
-
             }
         );
-
     }
-
-
     if(!data.length){
-
         document
             .getElementById("list")
             .innerHTML =
@@ -1104,12 +801,8 @@ function render(){
                 ФОП не знайдено
             </div>
             `;
-
         return;
-
     }
-
-
     document
         .getElementById("list")
         .innerHTML =
@@ -1118,33 +811,22 @@ function render(){
                 card
             )
             .join("");
-
 }
-
-
 /* ================================
    КАРТОЧКА
 ================================ */
-
 function card(fop){
-
     const p =
         percent(
             fop.turnover
         );
-
-
     const z =
         zone(
             fop.turnover
         );
-
-
     const remaining =
         LIMIT -
         fop.turnover;
-
-
     const width =
         Math.min(
             100,
@@ -1153,13 +835,8 @@ function card(fop){
                 p
             )
         );
-
-
     let remainingText;
-
-
     if(remaining <= 0){
-
         remainingText =
             "перевищення " +
             money(
@@ -1167,27 +844,18 @@ function card(fop){
                     remaining
                 )
             );
-
     }
     else{
-
         remainingText =
             "залишок " +
             money(
                 remaining
             );
-
     }
-
-
     return `
-
         <div class="row">
-
             <div class="row-main">
-
                 <div>
-
                     <div
                         class="name"
                         title="${safe(
@@ -1198,19 +866,13 @@ function card(fop){
                             fop.name
                         )}
                     </div>
-
                     <div class="meta">
                         ліміт:
                         ${money(LIMIT)}
                     </div>
-
                 </div>
-
-
                 <div>
-
                     <div class="bar-bg">
-
                         <div
                             class="
                                 bar
@@ -1221,12 +883,8 @@ function card(fop){
                                 ${width}%
                             "
                         ></div>
-
                     </div>
-
-
                     <div class="info-line">
-
                         <span>
                             дохід:
                             <b>
@@ -1235,16 +893,11 @@ function card(fop){
                                 )}
                             </b>
                         </span>
-
                         <span>
                             ${p.toFixed(1)}%
                         </span>
-
                     </div>
-
                 </div>
-
-
                 <div
                     class="
                         percent
@@ -1253,16 +906,11 @@ function card(fop){
                 >
                     ${p.toFixed(1)}%
                 </div>
-
             </div>
-
-
             <div class="bottom">
-
                 <span>
                     2026
                 </span>
-
                 <span
                     class="
                         remaining
@@ -1271,31 +919,22 @@ function card(fop){
                 >
                     ${remainingText}
                 </span>
-
             </div>
-
         </div>
-
     `;
-
 }
-
-
 /* ================================
    ФИЛЬТРЫ
 ================================ */
-
 document
     .querySelectorAll(
         ".filter"
     )
     .forEach(
         function(button){
-
             button.addEventListener(
                 "click",
                 function(){
-
                     document
                         .querySelectorAll(
                             ".filter"
@@ -1308,98 +947,65 @@ document
                                     );
                             }
                         );
-
-
                     button.classList
                         .add(
                             "active"
                         );
-
-
                     currentFilter =
                         button.dataset.filter;
-
-
                     render();
-
                 }
             );
-
         }
     );
-
-
 /* ================================
    ПОИСК
 ================================ */
-
 document
     .getElementById("search")
     .addEventListener(
         "input",
         function(){
-
             document
                 .getElementById(
                     "topSearch"
                 )
                 .value =
                 this.value;
-
             render();
-
         }
     );
-
-
 document
     .getElementById("topSearch")
     .addEventListener(
         "input",
         function(){
-
             document
                 .getElementById(
                     "search"
                 )
                 .value =
                 this.value;
-
             render();
-
         }
     );
-
-
 /* ================================
    СОРТИРОВКА
 ================================ */
-
 document
     .getElementById("sort")
     .addEventListener(
         "change",
         render
     );
-
-
 /* ================================
    ЗАПУСК
 ================================ */
-
 load();
-
-
-/*
- * Обновление каждые 3 секунды.
- */
-
 setInterval(
     load,
     REFRESH
 );
-
 </script>
-
 </body>
 </html>
