@@ -14,39 +14,34 @@
 
   <script type="text/babel">
     const ANNUAL_LIMIT = 6672000;
-    // Ваша защищенная ссылка с токеном:
     const API_URL = "https://script.google.com/macros/s/AKfycbyLD2QN9UILPy2mKezJZyr4cMAz4CsRQp3YIioHPwL3OPwNU1X9A5OOlamhdJSyh_Az/exec?token=my-secure-fop-token-2026";
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1mKg2IIYbNauWYe7UC7TI5dKW70rvALAMxzOpdQGqnFQ/edit";
 
     function App() {
-      const [fops, setFops] = React.useState([
-        { id: 1, name: "ФОП ЛІТВІНОВА ЛІЛІЯ ВІКТОРІВНІВ", inn: "2848013968", banks: "НОВАПЕЙ", turnover: 3647295 },
-        { id: 2, name: "ФОП Гоц Георгій Олександрович", inn: "3665109659", banks: "НОВАПЕЙ", turnover: 5930814 },
-        { id: 3, name: "ФОП Постольний Євгеній Віталійович", inn: "3565711577", banks: "НОВАПЕЙ", turnover: 6105651 },
-        { id: 4, name: "ФОП Левченко Анастасія Миколаївна", inn: "3506907965", banks: "УКРСІБ", turnover: 0 }
-      ]);
+      const [fops, setFops] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
       const [lastSync, setLastSync] = React.useState("Загрузка...");
       const [search, setSearch] = React.useState("");
       const [filter, setFilter] = React.useState("all");
 
-      // Функция получения актуальных данных в реальном времени из приватной таблицы
-      React.useEffect(() => {
-        async function fetchSheetData() {
-          try {
-            const response = await fetch(API_URL);
-            const result = await response.json();
-            if (result.status === "success" && result.data) {
-              setLastSync(new Date().toLocaleTimeString());
-            }
-          } catch (e) {
-            console.error("Ошибка синхронизации:", e);
-          } finally {
-            setLoading(false);
+      const fetchSheetData = async () => {
+        try {
+          const response = await fetch(API_URL);
+          const result = await response.json();
+          if (result.status === "success" && result.data) {
+            setFops(result.data);
+            setLastSync(new Date().toLocaleTimeString());
           }
+        } catch (e) {
+          console.error("Ошибка синхронизации:", e);
+        } finally {
+          setLoading(false);
         }
+      };
+
+      React.useEffect(() => {
         fetchSheetData();
-        const interval = setInterval(fetchSheetData, 15000); // Автообновление каждые 15 секунд
+        const interval = setInterval(fetchSheetData, 10000); // Автообновление каждые 10 секунд
         return () => clearInterval(interval);
       }, []);
 
@@ -127,34 +122,38 @@
                 <input type="text" placeholder="Поиск ФОП..." value={search} onChange={e => setSearch(e.target.value)} className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg outline-none w-full md:w-64" />
               </div>
 
-              <div className="space-y-3">
-                {filtered.map(f => (
-                  <div key={f.id} className="p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-200 transition">
-                    <div className="md:w-1/3">
-                      <div className="font-semibold text-sm text-slate-900">{f.name}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">ИНН {f.inn} • {f.banks}</div>
-                    </div>
-                    <div className="md:w-1/3">
-                      <div className="relative w-full h-7 bg-slate-100 rounded-lg overflow-hidden flex items-center px-3 justify-between">
-                        <div className={`absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-lg`} style={{ width: `${f.pct}%` }}></div>
-                        <span className="relative z-10 text-[11px] font-medium text-slate-700">остаток {new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴</span>
-                        <span className="relative z-10 text-xs font-bold text-slate-800">{f.pct}%</span>
+              {loading ? (
+                <div className="text-center py-12 text-slate-400 text-sm">Загрузка всех ФОПов из таблицы...</div>
+              ) : (
+                <div className="space-y-3">
+                  {filtered.map(f => (
+                    <div key={f.id} className="p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-200 transition">
+                      <div className="md:w-1/3">
+                        <div className="font-semibold text-sm text-slate-900">{f.name}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">ИНН {f.inn} • {f.banks}</div>
+                      </div>
+                      <div className="md:w-1/3">
+                        <div className="relative w-full h-7 bg-slate-100 rounded-lg overflow-hidden flex items-center px-3 justify-between">
+                          <div className={`absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-lg`} style={{ width: `${f.pct}%` }}></div>
+                          <span className="relative z-10 text-[11px] font-medium text-slate-700">остаток {new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴</span>
+                          <span className="relative z-10 text-xs font-bold text-slate-800">{f.pct}%</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 justify-between md:justify-end">
+                        <span className={`text-[11px] font-medium px-2.5 py-1 rounded-md border ${f.badge}`}>{f.label}</span>
+                        <a 
+                          href={SHEET_URL} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition shadow-sm"
+                        >
+                          <span>Таблица</span>
+                        </a>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 justify-between md:justify-end">
-                      <span className={`text-[11px] font-medium px-2.5 py-1 rounded-md border ${f.badge}`}>{f.label}</span>
-                      <a 
-                        href={SHEET_URL} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition shadow-sm"
-                      >
-                        <span>Таблица</span>
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </main>
         </div>
