@@ -1,931 +1,1403 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOP Limits</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<style>
+*{box-sizing:border-box}
 
-    <meta
-        http-equiv="Cache-Control"
-        content="no-cache, no-store, must-revalidate"
-    >
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f6f7f9;
+    color:#20242b
+}
 
-    <meta
-        http-equiv="Pragma"
-        content="no-cache"
-    >
+.app{display:flex;min-height:100vh}
 
-    <meta
-        http-equiv="Expires"
-        content="0"
-    >
+.sidebar{
+    width:210px;
+    background:#fff;
+    border-right:1px solid #e7e9ed;
+    padding:18px 12px;
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0
+}
 
-    <title>Контроль лімітів ФОП 2026</title>
+.logo{
+    font-size:16px;
+    font-weight:800;
+    padding:8px 10px 25px
+}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+.menu{
+    padding:11px 12px;
+    margin:3px 0;
+    border-radius:8px;
+    color:#777d87;
+    font-size:13px
+}
 
-        body {
-            margin: 0;
-            font-family:
-                Arial,
-                Helvetica,
-                sans-serif;
+.menu.active{
+    background:#eef1f5;
+    color:#20242b;
+    font-weight:bold
+}
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #f5f7fb 0%,
-                    #eef2f7 100%
-                );
+.main{
+    margin-left:210px;
+    width:calc(100% - 210px)
+}
 
-            color: #1f2937;
-        }
+.topbar{
+    height:58px;
+    background:white;
+    border-bottom:1px solid #e7e9ed;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 28px
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 30px 20px 50px;
-        }
+.top-search{
+    width:260px;
+    height:34px;
+    border:1px solid #e1e4e8;
+    border-radius:8px;
+    padding:0 12px;
+    outline:none;
+    font-size:12px
+}
 
-        .header {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow:
-                0 8px 30px rgba(0,0,0,0.07);
-        }
+.online{
+    font-size:11px;
+    color:#7d838c
+}
 
-        .title {
-            font-size: 30px;
-            font-weight: 800;
-            margin: 0 0 8px;
-        }
+.green-dot{
+    display:inline-block;
+    width:7px;
+    height:7px;
+    background:#31b86b;
+    border-radius:50%;
+    margin-right:6px
+}
 
-        .subtitle {
-            color: #6b7280;
-            margin: 0;
-            font-size: 15px;
-        }
+.green-dot.error{
+    background:#df4141
+}
 
-        .status {
-            margin-top: 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: #6b7280;
-        }
+.content{
+    max-width:1200px;
+    margin:auto;
+    padding:25px 28px 50px
+}
 
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #22c55e;
-        }
+h1{
+    margin:0;
+    font-size:23px
+}
 
-        .dot.error {
-            background: #ef4444;
-        }
+.subtitle{
+    margin-top:5px;
+    color:#999;
+    font-size:11px
+}
 
-        .stats {
-            display: grid;
-            grid-template-columns:
-                repeat(3, 1fr);
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin:20px 0
+}
 
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+.stat{
+    background:white;
+    border:1px solid #e7e9ed;
+    border-radius:13px;
+    padding:16px;
+    min-height:90px
+}
 
-        .stat {
-            background: white;
-            border-radius: 18px;
-            padding: 22px;
-            box-shadow:
-                0 8px 30px rgba(0,0,0,0.06);
-        }
+.stat-title{
+    color:#90959d;
+    font-size:10px;
+    margin-bottom:10px
+}
 
-        .stat-label {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 10px;
-        }
+.stat-value{
+    font-size:24px;
+    font-weight:800
+}
 
-        .stat-value {
-            font-size: 28px;
-            font-weight: 800;
-        }
+.stat.red .stat-value{color:#df4141}
+.stat.yellow .stat-value{color:#c58a16}
+.stat.green .stat-value{color:#27995b}
 
-        .search-box {
-            background: white;
-            padding: 18px;
-            border-radius: 18px;
-            margin-bottom: 20px;
-            box-shadow:
-                0 8px 30px rgba(0,0,0,0.06);
-        }
+.stat-note{
+    margin-top:7px;
+    color:#aaa;
+    font-size:9px
+}
 
-        .search {
-            width: 100%;
-            padding: 15px 18px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-        }
+.panel{
+    background:white;
+    border:1px solid #e7e9ed;
+    border-radius:14px;
+    overflow:hidden
+}
 
-        .search:focus {
-            border-color: #2563eb;
-        }
+.panel-header{
+    padding:16px 18px;
+    border-bottom:1px solid #e7e9ed;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px
+}
 
-        .list {
-            display: grid;
-            gap: 15px;
-        }
+.panel-title{
+    font-size:14px;
+    font-weight:800
+}
 
-        .card {
-            background: white;
-            border-radius: 18px;
-            padding: 22px;
-            box-shadow:
-                0 8px 30px rgba(0,0,0,0.06);
+.controls{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    flex-wrap:wrap
+}
 
-            border-left: 6px solid #22c55e;
-        }
+button,select,.list-search{
+    height:30px;
+    border:1px solid #e1e4e8;
+    background:white;
+    border-radius:7px;
+    padding:0 10px;
+    font-size:10px;
+    color:#777d87;
+    cursor:pointer
+}
 
-        .card.watch {
-            border-left-color: #f59e0b;
-        }
+button.active{
+    background:#eef1f5;
+    color:#20242b;
+    font-weight:bold
+}
 
-        .card.high {
-            border-left-color: #f97316;
-        }
+.list-search{
+    width:150px;
+    outline:none
+}
 
-        .card.critical {
-            border-left-color: #ef4444;
-        }
+.legend{
+    padding:9px 18px;
+    border-bottom:1px solid #eee;
+    font-size:9px;
+    color:#999;
+    display:flex;
+    gap:16px
+}
 
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 20px;
-        }
+.legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:5px
+}
 
-        .fop-name {
-            font-size: 20px;
-            font-weight: 800;
-            margin-bottom: 7px;
-        }
+.dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    display:inline-block
+}
 
-        .details {
-            color: #6b7280;
-            font-size: 14px;
-            line-height: 1.6;
-        }
+.dot.green{background:#31b86b}
+.dot.yellow{background:#f2b233}
+.dot.red{background:#df4141}
 
-        .percent {
-            font-size: 26px;
-            font-weight: 900;
-            white-space: nowrap;
-        }
+.row{
+    padding:14px 18px;
+    border-bottom:1px solid #f0f1f3
+}
 
-        .progress {
-            height: 12px;
-            background: #e5e7eb;
-            border-radius: 20px;
-            overflow: hidden;
-            margin-top: 18px;
-        }
+.row:last-child{
+    border-bottom:0
+}
 
-        .progress-bar {
-            height: 100%;
-            width: 0;
-            background: #22c55e;
-            border-radius: 20px;
-            transition: width 0.5s ease;
-        }
+.row-main{
+    display:grid;
+    grid-template-columns:230px 1fr 75px;
+    gap:18px;
+    align-items:center
+}
 
-        .progress-bar.watch {
-            background: #f59e0b;
-        }
+.name{
+    font-size:12px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis
+}
 
-        .progress-bar.high {
-            background: #f97316;
-        }
+.meta{
+    font-size:9px;
+    color:#a0a5ac;
+    margin-top:4px
+}
 
-        .progress-bar.critical {
-            background: #ef4444;
-        }
+.bar-bg{
+    height:9px;
+    background:#eceef1;
+    border-radius:20px;
+    overflow:hidden
+}
 
-        .money-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 12px;
-            font-size: 14px;
-            color: #6b7280;
-        }
+.bar{
+    height:100%;
+    border-radius:20px;
+    transition:width .4s
+}
 
-        .money {
-            font-weight: 800;
-            color: #111827;
-        }
+.bar.green{background:#31b86b}
+.bar.yellow{background:#f2b233}
+.bar.red{background:#df4141}
 
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            border-radius: 15px;
-            padding: 18px;
-            margin-bottom: 20px;
-            display: none;
-            white-space: pre-wrap;
-        }
+.info-line{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+    font-size:9px;
+    color:#999
+}
 
-        .empty {
-            background: white;
-            padding: 40px;
-            border-radius: 18px;
-            text-align: center;
-            color: #6b7280;
-        }
+.percent{
+    text-align:right;
+    font-size:16px;
+    font-weight:900
+}
 
-        .loading {
-            background: white;
-            border-radius: 18px;
-            padding: 40px;
-            text-align: center;
-            color: #6b7280;
-        }
+.percent.green{color:#27995b}
+.percent.yellow{color:#c58a16}
+.percent.red{color:#d53b3b}
 
-        @media (max-width: 800px) {
-            .stats {
-                grid-template-columns: 1fr;
-            }
+.bottom{
+    display:flex;
+    justify-content:space-between;
+    margin-top:7px;
+    font-size:9px;
+    color:#999
+}
 
-            .card-top {
-                flex-direction: column;
-            }
+.remaining.green{color:#27995b}
+.remaining.yellow{color:#c58a16}
+.remaining.red{color:#d53b3b;font-weight:bold}
 
-            .title {
-                font-size: 24px;
-            }
-        }
-    </style>
+.error{
+    display:none;
+    background:#fff0f0;
+    border:1px solid #f1caca;
+    color:#a33131;
+    padding:12px;
+    border-radius:9px;
+    margin-bottom:15px;
+    font-size:11px
+}
+
+.empty{
+    text-align:center;
+    padding:40px;
+    color:#999;
+    font-size:12px
+}
+
+@media(max-width:900px){
+    .sidebar{display:none}
+    .main{
+        margin-left:0;
+        width:100%
+    }
+    .stats{
+        grid-template-columns:repeat(2,1fr)
+    }
+}
+
+@media(max-width:600px){
+    .topbar{padding:0 12px}
+    .top-search{width:180px}
+    .content{padding:15px 10px}
+    .stats{grid-template-columns:1fr}
+    .panel-header{
+        align-items:flex-start;
+        flex-direction:column
+    }
+    .row-main{
+        grid-template-columns:1fr 65px
+    }
+    .progress{
+        grid-column:1/-1
+    }
+}
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="app">
 
-    <div class="header">
+<aside class="sidebar">
 
-        <h1 class="title">
-            Контроль лімітів ФОП 2026
-        </h1>
+    <div class="logo">
+        FOP Limits
+    </div>
 
-        <p class="subtitle">
-            Моніторинг доходів ФОП у реальному часі
-        </p>
+    <div class="menu active">
+        ▦ &nbsp; Дашборд
+    </div>
 
-        <div class="status">
-            <span id="statusDot" class="dot"></span>
-            <span id="statusText">
-                Завантаження...
-            </span>
+    <div class="menu">
+        ◉ &nbsp; ФОП
+    </div>
+
+    <div class="menu">
+        ▥ &nbsp; Статистика
+    </div>
+
+    <div class="menu">
+        ⚙ &nbsp; Налаштування
+    </div>
+
+</aside>
+
+
+<main class="main">
+
+<header class="topbar">
+
+    <input
+        id="topSearch"
+        class="top-search"
+        placeholder="Найти ФОП..."
+    >
+
+    <div class="online">
+        <span
+            id="dot"
+            class="green-dot"
+        ></span>
+
+        <span id="status">
+            Синхронізація...
+        </span>
+    </div>
+
+</header>
+
+
+<div class="content">
+
+    <div>
+        <h1>Дашборд</h1>
+
+        <div class="subtitle">
+            Контроль доходів ФОП за 2026 рік
         </div>
-
     </div>
 
 
-    <div id="errorBox" class="error"></div>
+    <div
+        id="error"
+        class="error"
+    ></div>
 
 
     <div class="stats">
 
         <div class="stat">
-            <div class="stat-label">
+
+            <div class="stat-title">
                 Всього ФОП
             </div>
 
             <div
-                id="fopCount"
+                id="count"
                 class="stat-value"
             >
                 —
             </div>
+
+            <div class="stat-note">
+                дані з Google Sheets
+            </div>
+
         </div>
 
 
         <div class="stat">
-            <div class="stat-label">
+
+            <div class="stat-title">
                 Загальний дохід
             </div>
 
             <div
-                id="totalTurnover"
+                id="total"
                 class="stat-value"
             >
                 —
             </div>
+
+            <div class="stat-note">
+                по всіх ФОП
+            </div>
+
         </div>
 
 
-        <div class="stat">
-            <div class="stat-label">
-                Вільний ліміт
+        <div class="stat green">
+
+            <div class="stat-title">
+                Загальний запас
             </div>
 
             <div
-                id="freeLimit"
+                id="free"
                 class="stat-value"
             >
                 —
             </div>
+
+            <div class="stat-note">
+                по всіх ФОП
+            </div>
+
+        </div>
+
+
+        <div class="stat red">
+
+            <div class="stat-title">
+                Червона зона
+            </div>
+
+            <div
+                id="redCount"
+                class="stat-value"
+            >
+                —
+            </div>
+
+            <div class="stat-note">
+                ліміт 6 672 000 грн
+            </div>
+
         </div>
 
     </div>
 
 
-    <div class="search-box">
+    <section class="panel">
 
-        <input
-            id="search"
-            class="search"
-            type="text"
-            placeholder="Пошук ФОП за назвою або ІНН..."
-        >
+        <div class="panel-header">
 
-    </div>
+            <div class="panel-title">
+                Ліміти по ФОП
+            </div>
 
+            <div class="controls">
 
-    <div
-        id="list"
-        class="list"
-    >
+                <button
+                    class="filter active"
+                    data-filter="all"
+                >
+                    Всі
+                    <span id="allCount">23</span>
+                </button>
 
-        <div class="loading">
-            Завантаження даних...
+                <button
+                    class="filter"
+                    data-filter="red"
+                >
+                    🔴 Червона
+                    <span id="redNumber">0</span>
+                </button>
+
+                <button
+                    class="filter"
+                    data-filter="yellow"
+                >
+                    🟡 Увага
+                    <span id="yellowNumber">0</span>
+                </button>
+
+                <button
+                    class="filter"
+                    data-filter="green"
+                >
+                    🟢 Норма
+                    <span id="greenNumber">0</span>
+                </button>
+
+                <select id="sort">
+                    <option value="percent">
+                        % ліміту ↓
+                    </option>
+
+                    <option value="income">
+                        Дохід ↓
+                    </option>
+
+                    <option value="name">
+                        ФІО А–Я
+                    </option>
+                </select>
+
+                <input
+                    id="search"
+                    class="list-search"
+                    placeholder="Пошук..."
+                >
+
+            </div>
+
         </div>
 
-    </div>
+
+        <div class="legend">
+
+            <span>
+                <i class="dot green"></i>
+                запас більше 2 млн
+            </span>
+
+            <span>
+                <i class="dot yellow"></i>
+                запас 2 млн або менше
+            </span>
+
+            <span>
+                <i class="dot red"></i>
+                ліміт досягнуто
+            </span>
+
+        </div>
+
+
+        <div id="list">
+
+            <div class="empty">
+                Завантаження...
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+</main>
 
 </div>
 
 
 <script>
 
-    /*
-     * ================================
-     * НАСТРОЙКИ
-     * ================================
-     */
+/* ================================
+   НАСТРОЙКИ
+================================ */
 
-    const API_URL =
-        "https://script.google.com/macros/s/AKfycbyX4JrbmO2ZdOQbIiWYqDWHPsuLiljkBgEzLRhV-mGLrNCsF4Y-4z23eAGcOwhAAYRL/exec?token=my-secure-fop-token-2026";
+const API =
+"https://script.google.com/macros/s/AKfycbyX4JrbmO2ZdOQbIiWYqDWHPsuLiljkBgEzLRhV-mGLrNCsF4Y-4z23eAGcOwhAAYRL/exec?token=my-secure-fop-token-2026";
 
+const LIMIT = 6672000;
 
-    /*
-     * Лимит ФОП на 2026 год.
-     */
+const YELLOW = 2000000;
 
-    const ANNUAL_LIMIT = 6672000;
+const REFRESH = 3000;
 
 
-    /*
-     * Обновляем данные каждые 5 секунд.
-     */
+/* ================================
+   ДАННЫЕ
+================================ */
 
-    const REFRESH_INTERVAL = 5000;
+let fops = [];
+
+let currentFilter = "all";
 
 
-    let allFops = [];
+/* ================================
+   ФОРМАТ
+================================ */
+
+function money(value){
+
+    return new Intl.NumberFormat(
+        "uk-UA",
+        {
+            maximumFractionDigits:0
+        }
+    ).format(
+        Number(value) || 0
+    ) + " грн";
+
+}
 
 
-    /*
-     * Формат денег.
-     */
+/* ================================
+   ПРОЦЕНТ
+================================ */
 
-    function formatMoney(value) {
+function percent(value){
 
-        return new Intl.NumberFormat(
-            "uk-UA",
-            {
-                maximumFractionDigits: 0
-            }
-        ).format(Number(value) || 0) + " грн";
+    return (
+        Number(value || 0) /
+        LIMIT *
+        100
+    );
+
+}
+
+
+/* ================================
+   ЦВЕТ
+================================ */
+
+function zone(value){
+
+    const remaining =
+        LIMIT - Number(value || 0);
+
+    if(remaining <= 0){
+
+        return "red";
 
     }
 
+    if(remaining <= YELLOW){
 
-    /*
-     * Процент использования лимита.
-     */
+        return "yellow";
 
-    function getPercent(turnover) {
+    }
 
-        return (
-            (Number(turnover) / ANNUAL_LIMIT) * 100
+    return "green";
+
+}
+
+
+/* ================================
+   ЗАЩИТА HTML
+================================ */
+
+function safe(text){
+
+    return String(text || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* ================================
+   ЗАГРУЗКА GOOGLE SHEETS
+================================ */
+
+async function load(){
+
+    try{
+
+        const response =
+            await fetch(
+                API +
+                "&_=" +
+                Date.now(),
+                {
+                    cache:"no-store"
+                }
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "GOOGLE SHEETS:",
+            result
         );
 
-    }
 
+        if(
+            result.status !==
+            "success"
+        ){
 
-    /*
-     * Категория ФОП.
-     */
-
-    function getCategory(percent) {
-
-        if (percent >= 90) {
-            return "critical";
-        }
-
-        if (percent >= 80) {
-            return "high";
-        }
-
-        if (percent >= 70) {
-            return "watch";
-        }
-
-        return "safe";
-
-    }
-
-
-    /*
-     * Загружаем данные из Google Apps Script.
-     */
-
-    async function loadData() {
-
-        const errorBox =
-            document.getElementById("errorBox");
-
-        const statusText =
-            document.getElementById("statusText");
-
-        const statusDot =
-            document.getElementById("statusDot");
-
-
-        try {
-
-            /*
-             * Добавляем timestamp,
-             * чтобы браузер не использовал старый cache.
-             */
-
-            const url =
-                API_URL +
-                "&_=" +
-                Date.now();
-
-
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "GET",
-                        cache: "no-store"
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    "HTTP ошибка: " +
-                    response.status
-                );
-
-            }
-
-
-            const result =
-                await response.json();
-
-
-            console.log(
-                "API:",
-                result
+            throw new Error(
+                result.error ||
+                "Ошибка API"
             );
-
-
-            if (result.status !== "success") {
-
-                throw new Error(
-                    result.error ||
-                    "Google Apps Script вернул ошибку"
-                );
-
-            }
-
-
-            if (!Array.isArray(result.data)) {
-
-                throw new Error(
-                    "API не вернул массив data"
-                );
-
-            }
-
-
-            /*
-             * Сохраняем данные.
-             */
-
-            allFops = result.data;
-
-
-            /*
-             * Обновляем интерфейс.
-             */
-
-            updateStats();
-
-            renderFops();
-
-
-            /*
-             * Убираем ошибку.
-             */
-
-            errorBox.style.display =
-                "none";
-
-
-            statusDot.classList.remove(
-                "error"
-            );
-
-
-            const now =
-                new Date();
-
-
-            statusText.textContent =
-                "Синхронізовано: " +
-                now.toLocaleTimeString(
-                    "uk-UA"
-                ) +
-                " • ФОП: " +
-                allFops.length;
-
-
-        } catch (error) {
-
-            console.error(
-                "Ошибка загрузки:",
-                error
-            );
-
-
-            statusDot.classList.add(
-                "error"
-            );
-
-
-            statusText.textContent =
-                "Помилка синхронізації";
-
-
-            errorBox.style.display =
-                "block";
-
-
-            errorBox.textContent =
-                "Не удалось получить данные.\n\n" +
-                error.message;
 
         }
 
-    }
 
+        fops =
+            result.data.map(
+                function(item){
 
-    /*
-     * Статистика сверху.
-     */
+                    return {
 
-    function updateStats() {
+                        name:
+                            String(
+                                item.name ||
+                                "ФОП"
+                            ),
 
-        const count =
-            allFops.length;
+                        turnover:
+                            Number(
+                                item.turnover ||
+                                0
+                            )
 
-
-        const total =
-            allFops.reduce(
-                function(sum, fop) {
-
-                    return sum +
-                        Number(fop.turnover || 0);
-
-                },
-                0
-            );
-
-
-        const free =
-            Math.max(
-                0,
-                ANNUAL_LIMIT - total
-            );
-
-
-        document.getElementById(
-            "fopCount"
-        ).textContent = count;
-
-
-        document.getElementById(
-            "totalTurnover"
-        ).textContent =
-            formatMoney(total);
-
-
-        document.getElementById(
-            "freeLimit"
-        ).textContent =
-            formatMoney(free);
-
-    }
-
-
-    /*
-     * Отрисовка ФОП.
-     */
-
-    function renderFops() {
-
-        const list =
-            document.getElementById(
-                "list"
-            );
-
-
-        const search =
-            document.getElementById(
-                "search"
-            ).value
-            .trim()
-            .toLowerCase();
-
-
-        const filtered =
-            allFops.filter(
-                function(fop) {
-
-                    const name =
-                        String(
-                            fop.name || ""
-                        ).toLowerCase();
-
-
-                    const inn =
-                        String(
-                            fop.inn || ""
-                        ).toLowerCase();
-
-
-                    return (
-                        name.includes(search) ||
-                        inn.includes(search)
-                    );
+                    };
 
                 }
             );
 
 
-        if (filtered.length === 0) {
+        update();
 
-            list.innerHTML =
-                '<div class="empty">' +
-                'ФОП не знайдено' +
-                '</div>';
 
-            return;
+        document
+            .getElementById("error")
+            .style.display =
+            "none";
+
+
+        document
+            .getElementById("dot")
+            .classList
+            .remove("error");
+
+
+        document
+            .getElementById("status")
+            .textContent =
+            "Оновлено " +
+            new Date()
+                .toLocaleTimeString(
+                    "uk-UA"
+                );
+
+
+    }
+    catch(error){
+
+        console.error(error);
+
+
+        document
+            .getElementById("dot")
+            .classList
+            .add("error");
+
+
+        document
+            .getElementById("status")
+            .textContent =
+            "Помилка синхронізації";
+
+
+        const box =
+            document.getElementById(
+                "error"
+            );
+
+
+        box.style.display =
+            "block";
+
+
+        box.textContent =
+            "Не вдалося отримати дані:\n" +
+            error.message;
+
+    }
+
+}
+
+
+/* ================================
+   ОБНОВЛЕНИЕ
+================================ */
+
+function update(){
+
+    let total = 0;
+
+    let red = 0;
+
+    let yellow = 0;
+
+    let green = 0;
+
+
+    fops.forEach(
+        function(fop){
+
+            total += fop.turnover;
+
+            const z =
+                zone(
+                    fop.turnover
+                );
+
+            if(z === "red"){
+                red++;
+            }
+
+            if(z === "yellow"){
+                yellow++;
+            }
+
+            if(z === "green"){
+                green++;
+            }
 
         }
+    );
 
 
-        list.innerHTML =
-            filtered
-                .map(
-                    function(fop) {
+    /*
+     * Общий запас =
+     * лимит каждого ФОП
+     * минус его доход.
+     */
 
-                        return createCard(
-                            fop
-                        );
+    const free =
+        Math.max(
+            0,
+            LIMIT * fops.length -
+            total
+        );
 
-                    }
-                )
-                .join("");
+
+    document
+        .getElementById("count")
+        .textContent =
+        fops.length;
+
+
+    document
+        .getElementById("total")
+        .textContent =
+        compact(total);
+
+
+    document
+        .getElementById("free")
+        .textContent =
+        compact(free);
+
+
+    document
+        .getElementById("redCount")
+        .textContent =
+        red;
+
+
+    document
+        .getElementById("allCount")
+        .textContent =
+        fops.length;
+
+
+    document
+        .getElementById("redNumber")
+        .textContent =
+        red;
+
+
+    document
+        .getElementById("yellowNumber")
+        .textContent =
+        yellow;
+
+
+    document
+        .getElementById("greenNumber")
+        .textContent =
+        green;
+
+
+    render();
+
+}
+
+
+/* ================================
+   КОРОТКИЕ МЛН
+================================ */
+
+function compact(value){
+
+    value =
+        Number(value) || 0;
+
+
+    if(value >= 1000000){
+
+        return (
+            value /
+            1000000
+        )
+        .toFixed(1)
+        .replace(".",",") +
+        " млн";
 
     }
 
 
-    /*
-     * Карточка одного ФОП.
-     */
+    return money(value);
 
-    function createCard(fop) {
-
-        const turnover =
-            Number(
-                fop.turnover || 0
-            );
+}
 
 
-        const percent =
-            getPercent(
-                turnover
-            );
+/* ================================
+   РЕНДЕР
+================================ */
+
+function render(){
+
+    const search =
+        (
+            document
+                .getElementById(
+                    "search"
+                )
+                .value ||
+
+            document
+                .getElementById(
+                    "topSearch"
+                )
+                .value ||
+
+            ""
+        )
+        .toLowerCase()
+        .trim();
 
 
-        const safePercent =
-            Math.min(
-                100,
-                Math.max(
-                    0,
-                    percent
+    let data =
+        fops.filter(
+            function(fop){
+
+                const matchSearch =
+                    fop.name
+                        .toLowerCase()
+                        .includes(
+                            search
+                        );
+
+
+                const matchFilter =
+                    currentFilter ===
+                    "all" ||
+
+                    zone(
+                        fop.turnover
+                    ) ===
+                    currentFilter;
+
+
+                return (
+                    matchSearch &&
+                    matchFilter
+                );
+
+            }
+        );
+
+
+    const sort =
+        document
+            .getElementById(
+                "sort"
+            )
+            .value;
+
+
+    if(sort === "percent"){
+
+        data.sort(
+            function(a,b){
+
+                return (
+                    percent(
+                        b.turnover
+                    ) -
+                    percent(
+                        a.turnover
+                    )
+                );
+
+            }
+        );
+
+    }
+
+
+    if(sort === "income"){
+
+        data.sort(
+            function(a,b){
+
+                return (
+                    b.turnover -
+                    a.turnover
+                );
+
+            }
+        );
+
+    }
+
+
+    if(sort === "name"){
+
+        data.sort(
+            function(a,b){
+
+                return a.name.localeCompare(
+                    b.name,
+                    "uk"
+                );
+
+            }
+        );
+
+    }
+
+
+    if(!data.length){
+
+        document
+            .getElementById("list")
+            .innerHTML =
+            `
+            <div class="empty">
+                ФОП не знайдено
+            </div>
+            `;
+
+        return;
+
+    }
+
+
+    document
+        .getElementById("list")
+        .innerHTML =
+        data
+            .map(
+                card
+            )
+            .join("");
+
+}
+
+
+/* ================================
+   КАРТОЧКА
+================================ */
+
+function card(fop){
+
+    const p =
+        percent(
+            fop.turnover
+        );
+
+
+    const z =
+        zone(
+            fop.turnover
+        );
+
+
+    const remaining =
+        LIMIT -
+        fop.turnover;
+
+
+    const width =
+        Math.min(
+            100,
+            Math.max(
+                0,
+                p
+            )
+        );
+
+
+    let remainingText;
+
+
+    if(remaining <= 0){
+
+        remainingText =
+            "перевищення " +
+            money(
+                Math.abs(
+                    remaining
                 )
             );
 
+    }
+    else{
 
-        const category =
-            getCategory(
-                percent
+        remainingText =
+            "залишок " +
+            money(
+                remaining
             );
 
-
-        const free =
-            Math.max(
-                0,
-                ANNUAL_LIMIT - turnover
-            );
+    }
 
 
-        let categoryText =
-            "Безпечно";
+    return `
 
+        <div class="row">
 
-        if (category === "watch") {
-            categoryText =
-                "Увага";
-        }
+            <div class="row-main">
 
-        if (category === "high") {
-            categoryText =
-                "Високе навантаження";
-        }
-
-        if (category === "critical") {
-            categoryText =
-                "Критично";
-        }
-
-
-        return `
-
-            <div class="card ${category}">
-
-                <div class="card-top">
-
-                    <div>
-
-                        <div class="fop-name">
-                            ${escapeHtml(
-                                fop.name ||
-                                "Не указан"
-                            )}
-                        </div>
-
-                        <div class="details">
-
-                            ІНН:
-                            ${escapeHtml(
-                                fop.inn ||
-                                "Не указан"
-                            )}
-
-                            <br>
-
-                            Банк:
-                            ${escapeHtml(
-                                fop.banks ||
-                                "Не указан"
-                            )}
-
-                            <br>
-
-                            Статус:
-                            ${categoryText}
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="percent">
-
-                        ${percent.toFixed(1)}%
-
-                    </div>
-
-                </div>
-
-
-                <div class="progress">
+                <div>
 
                     <div
-                        class="progress-bar ${category}"
-                        style="width: ${safePercent}%"
-                    ></div>
+                        class="name"
+                        title="${safe(
+                            fop.name
+                        )}"
+                    >
+                        ${safe(
+                            fop.name
+                        )}
+                    </div>
+
+                    <div class="meta">
+                        ліміт:
+                        ${money(LIMIT)}
+                    </div>
 
                 </div>
 
 
-                <div class="money-row">
+                <div>
 
-                    <span>
-                        Дохід
-                    </span>
+                    <div class="bar-bg">
 
-                    <span class="money">
-                        ${formatMoney(turnover)}
-                    </span>
+                        <div
+                            class="
+                                bar
+                                ${z}
+                            "
+                            style="
+                                width:
+                                ${width}%
+                            "
+                        ></div>
+
+                    </div>
+
+
+                    <div class="info-line">
+
+                        <span>
+                            дохід:
+                            <b>
+                                ${money(
+                                    fop.turnover
+                                )}
+                            </b>
+                        </span>
+
+                        <span>
+                            ${p.toFixed(1)}%
+                        </span>
+
+                    </div>
 
                 </div>
 
 
-                <div class="money-row">
-
-                    <span>
-                        Залишок ліміту
-                    </span>
-
-                    <span class="money">
-                        ${formatMoney(free)}
-                    </span>
-
+                <div
+                    class="
+                        percent
+                        ${z}
+                    "
+                >
+                    ${p.toFixed(1)}%
                 </div>
 
             </div>
 
-        `;
 
-    }
+            <div class="bottom">
 
+                <span>
+                    2026
+                </span>
 
-    /*
-     * Защита от HTML в названии ФОП.
-     */
+                <span
+                    class="
+                        remaining
+                        ${z}
+                    "
+                >
+                    ${remainingText}
+                </span>
 
-    function escapeHtml(value) {
+            </div>
 
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        </div>
 
-    }
+    `;
 
-
-    /*
-     * Поиск.
-     */
-
-    document
-        .getElementById("search")
-        .addEventListener(
-            "input",
-            renderFops
-        );
+}
 
 
-    /*
-     * Первый запуск.
-     */
+/* ================================
+   ФИЛЬТРЫ
+================================ */
 
-    loadData();
+document
+    .querySelectorAll(
+        ".filter"
+    )
+    .forEach(
+        function(button){
+
+            button.addEventListener(
+                "click",
+                function(){
+
+                    document
+                        .querySelectorAll(
+                            ".filter"
+                        )
+                        .forEach(
+                            function(b){
+                                b.classList
+                                    .remove(
+                                        "active"
+                                    );
+                            }
+                        );
 
 
-    /*
-     * Автообновление каждые 5 секунд.
-     */
+                    button.classList
+                        .add(
+                            "active"
+                        );
 
-    setInterval(
-        loadData,
-        REFRESH_INTERVAL
+
+                    currentFilter =
+                        button.dataset.filter;
+
+
+                    render();
+
+                }
+            );
+
+        }
     );
+
+
+/* ================================
+   ПОИСК
+================================ */
+
+document
+    .getElementById("search")
+    .addEventListener(
+        "input",
+        function(){
+
+            document
+                .getElementById(
+                    "topSearch"
+                )
+                .value =
+                this.value;
+
+            render();
+
+        }
+    );
+
+
+document
+    .getElementById("topSearch")
+    .addEventListener(
+        "input",
+        function(){
+
+            document
+                .getElementById(
+                    "search"
+                )
+                .value =
+                this.value;
+
+            render();
+
+        }
+    );
+
+
+/* ================================
+   СОРТИРОВКА
+================================ */
+
+document
+    .getElementById("sort")
+    .addEventListener(
+        "change",
+        render
+    );
+
+
+/* ================================
+   ЗАПУСК
+================================ */
+
+load();
+
+
+/*
+ * Обновление каждые 3 секунды.
+ */
+
+setInterval(
+    load,
+    REFRESH
+);
 
 </script>
 
