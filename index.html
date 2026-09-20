@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ФОП Лимиты Dashboard</title>
+  <title>Мониторинг Лимитов ФОП</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -171,9 +171,10 @@
 
   <script>
     const CORRECT_PASSWORD = "K25dFa00GZ5pRDaRBPvY";
-    // Лимит 3 группы ФОП на 2026 год в гривнах (8 285 700 ₴)
-    const ANNUAL_LIMIT = 8285700;
-    const API_URL = "https://script.google.com/macros/s/AKfycbzQ7p2x42iI5yX0A76U9iV2s3-B6l98rDrmu6oFfT8kL6a1R9r/exec?token=my-secure-fop-token-2026";
+    const ANNUAL_LIMIT = 8285700; // Лимит 3 группы ФОП за 2026 год
+    
+    // Новая рабочая ссылка на Google Apps Script с токеном
+    const API_URL = "https://script.google.com/macros/s/AKfycb_jNqlXVuO2m9fNQ39-n6m38wY2a16UDOT7LULgmymV1cBRRojozx9ndK4HJpaVoeO/exec?token=my-secure-fop-token-2026";
 
     let fopData = [];
     let currentFilter = 'all';
@@ -225,10 +226,9 @@
           redirect: 'follow'
         });
 
-        if (!response.ok) throw new Error('Ошибка сети');
+        if (!response.ok) throw new Error('Ошибка сети: ' + response.statusText);
         const result = await response.json();
         
-        // Анализ формата ответа от Google Apps Script
         if (result.status === 'error') {
           throw new Error(result.message || 'Ошибка в Google Таблице');
         }
