@@ -40,7 +40,7 @@
 
       const [fops, setFops] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
-      const [isSyncing, setIsSyncing] = React.useState(false); // Состояние для ручного обновления
+      const [isSyncing, setIsSyncing] = React.useState(false);
       const [lastSync, setLastSync] = React.useState("Синхронизация...");
       const [search, setSearch] = React.useState("");
       const [filter, setFilter] = React.useState("all");
@@ -134,13 +134,14 @@
           const turnover = Number(item.turnover) || 0;
           const pct = Math.min(100, Number(((turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
           const remaining = ANNUAL_LIMIT - turnover;
+          const banks = item.banks || item.bank || "—";
           
           let cat = "safe", label = "Запас", badge = "bg-emerald-50 text-emerald-700 border-emerald-200/60", bar = "bg-emerald-500";
           if (pct >= 90) { cat = "critical"; label = "Критично"; badge = "bg-rose-50 text-rose-600 border-rose-200/60"; bar = "bg-rose-500"; }
           else if (pct >= 80) { cat = "high"; label = "Высокий риск"; badge = "bg-amber-50 text-amber-700 border-amber-200/60"; bar = "bg-amber-500"; }
           else if (pct >= 70) { cat = "watch"; label = "Следить"; badge = "bg-yellow-50 text-yellow-700 border-yellow-200/60"; bar = "bg-yellow-400"; }
           
-          return { ...item, turnover, pct, remaining, cat, label, badge, bar };
+          return { ...item, turnover, pct, remaining, banks, cat, label, badge, bar };
         });
 
         return list.sort((a, b) => sortOrder === "desc" ? b.remaining - a.remaining : a.remaining - b.remaining);
@@ -153,7 +154,8 @@
         const query = String(search || "").toLowerCase();
         const matchName = String(f.name || "").toLowerCase().includes(query);
         const matchInn = String(f.inn || "").toLowerCase().includes(query);
-        const matchesSearch = matchName || matchInn;
+        const matchBanks = String(f.banks || "").toLowerCase().includes(query);
+        const matchesSearch = matchName || matchInn || matchBanks;
         return filter === "all" ? matchesSearch : matchesSearch && f.cat === filter;
       });
 
@@ -281,7 +283,7 @@
                   <div className="relative flex-1 sm:flex-initial">
                     <input 
                       type="text" 
-                      placeholder="Поиск по ФОП или ІПН..." 
+                      placeholder="Поиск по ФОП, ІПН или банку..." 
                       value={search} 
                       onChange={e => setSearch(e.target.value)} 
                       className="pl-4 pr-4 py-2 h-9 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:bg-white transition w-full sm:w-60" 
@@ -299,7 +301,7 @@
                   {filtered.map((f, index) => (
                     <div key={f.id || index} className="group p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       
-                      {/* Название и ИНН с копированием по клику */}
+                      {/* Название, ИНН и Список Банков */}
                       <div className="lg:w-72 shrink-0">
                         <div 
                           onClick={() => copyToClipboard(f.name, "Название ФОП")}
@@ -312,7 +314,7 @@
                           </svg>
                         </div>
 
-                        <div className="text-xs text-slate-400 mt-1">
+                        <div className="text-xs text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
                           <button 
                             onClick={() => copyToClipboard(f.inn, `ИНН ${f.inn}`)}
                             title="Нажмите, чтобы скопировать ИНН"
@@ -325,6 +327,14 @@
                               </svg>
                             )}
                           </button>
+                        </div>
+
+                        {/* Строка с банками */}
+                        <div className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1 truncate">
+                          <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m4 0h1M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                          <span className="truncate font-medium text-slate-500">Банки: <span className="text-slate-700">{f.banks}</span></span>
                         </div>
                       </div>
                       
