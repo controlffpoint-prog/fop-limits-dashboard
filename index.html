@@ -17,7 +17,7 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const ANNUAL_LIMIT = 7211598; // Актуальный лимит 2 группы на 2026 год
+    const ANNUAL_LIMIT = 7211598; // Лимит 2 группы на 2026 год
     const API_URL = "https://script.google.com/macros/s/AKfycbx6QBgtoCRK76DnBP1BcpZTMHSnN48GdeCOovQhPfzNp-6LUA2Ee_yNt1rC0uzrsgSi/exec?token=my-secure-fop-token-2026";
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1mKg2IIYbNauWYe7UC7TI5dKW70rvALAMxzOpdQGqnFQ/edit";
     const CORRECT_PASSWORD = "K25dFa00GZ5pRDaRBPvY";
@@ -101,7 +101,7 @@
         );
       }
 
-      // Группируем все строки таблицы по ФОП (по ІПН или имени), аккуратно суммируя или добавляя уникальные банки
+      // Группируем по ФОП (по ІПН или имени), собирая все банки из строк таблиц
       const processed = React.useMemo(() => {
         const map = {};
 
@@ -119,7 +119,7 @@
           const bankName = item.banks && item.banks.trim() !== "" ? item.banks.trim() : "Основной счет";
           const turnoverVal = Number(item.turnover) || 0;
           
-          // Если в таблице есть несколько строк с одинаковым банком для одного ФОПа — суммируем их, если разные банки — добавляем оба
+          // Аккумулируем данные по каждому конкретному банку, если записей несколько
           const existingBank = map[key].banksBreakdown.find(b => b.bank.toLowerCase() === bankName.toLowerCase());
           if (existingBank) {
             existingBank.turnover += turnoverVal;
@@ -307,7 +307,7 @@
                         </div>
                       </div>
                       
-                      {/* Главный прогресс-бар общего лимита + все банки с их оборотами под ним */}
+                      {/* Общий прогресс-бар лимита + разбивка по банкам под ним */}
                       <div className="lg:w-2/5 space-y-2">
                         <div>
                           <div className="flex justify-between items-center text-[11px] mb-1">
@@ -319,7 +319,7 @@
                           </div>
                         </div>
 
-                        {/* Динамический вывод всех задействованных банков */}
+                        {/* Список всех банков (например, NovaPay и Монобанк) с оборотами */}
                         <div className="space-y-1.5 pt-1 border-t border-slate-100">
                           {f.banksBreakdown.map((b, idx) => {
                             const bankPct = Math.min(100, Number(((b.turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
@@ -338,10 +338,10 @@
                         </div>
                       </div>
 
-                      {/* Статус / Бэдж */}
+                      {/* Общий оборот и статус */}
                       <div className="flex items-center gap-3 justify-end lg:w-auto">
                         <div className="text-right hidden sm:block">
-                          <div className="text-[10px] uppercase font-semibold text-slate-400">Суммарно оборот</div>
+                          <div className="text-[10px] uppercase font-semibold text-slate-400">Разом оборот</div>
                           <div className="text-xs font-bold text-slate-800">{new Intl.NumberFormat("ru-RU").format(f.turnover)} ₴</div>
                         </div>
                         <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${f.badge}`}>{f.label}</span>
