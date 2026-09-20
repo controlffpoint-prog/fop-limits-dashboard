@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="ru">
 
@@ -152,7 +152,7 @@
 
               <div className="flex items-center gap-3 mb-6">
 
-                <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-500/30">⚡️</div>
+                <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-500/30">⚡</div>
 
                 <div>
 
@@ -175,7 +175,8 @@
                     placeholder="••••••••••••••••" 
 
                     value={passwordInput}
-[20.09.2026 14:01] Адам | FF.🔸: onChange={(e) => { setPasswordInput(e.target.value); setErrorMsg(false); }}
+
+                    onChange={(e) => { setPasswordInput(e.target.value); setErrorMsg(false); }}
 
                     className="w-full px-4 py-3 text-sm bg-slate-900/60 border border-slate-700/60 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition text-white placeholder-slate-500"
 
@@ -205,9 +206,9 @@
 
       const processed = React.useMemo(() => {
 
-        const list = (fops  []).map(item => {
+        const list = (fops || []).map(item => {
 
-          const turnover = Number(item.turnover)  0;
+          const turnover = Number(item.turnover) || 0;
 
           const pct = Math.min(100, Number(((turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
 
@@ -245,13 +246,13 @@
 
       const filtered = processed.filter(f => {
 
-        const query = String(search  "").toLowerCase();
+        const query = String(search || "").toLowerCase();
 
-        const matchName = String(f.name  "").toLowerCase().includes(query);
+        const matchName = String(f.name || "").toLowerCase().includes(query);
 
-        const matchInn = String(f.inn  "").toLowerCase().includes(query);
+        const matchInn = String(f.inn || "").toLowerCase().includes(query);
 
-        const matchesSearch = matchName  matchInn;
+        const matchesSearch = matchName || matchInn;
 
         return filter === "all" ? matchesSearch : matchesSearch && f.cat === filter;
 
@@ -273,7 +274,7 @@
 
               <div className="flex items-center gap-3 mb-10 px-2">
 
-                <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/20">⚡️</div>
+                <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/20">⚡</div>
 
                 <div>
 
@@ -294,7 +295,8 @@
                   Дашборд
 
                 </a>
-[20.09.2026 14:01] Адам | FF.🔸: </nav>
+
+              </nav>
 
             </div>
 
@@ -351,7 +353,8 @@
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
 
                 <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">В красной зоне</div>
-[20.09.2026 14:01] Адам | FF.🔸: <div className="text-3xl font-extrabold text-rose-600">{processed.filter(f => f.cat === "critical"  f.cat === "high").length}</div>
+
+                <div className="text-3xl font-extrabold text-rose-600">{processed.filter(f => f.cat === "critical" || f.cat === "high").length}</div>
 
                 <div className="text-[11px] text-slate-400 mt-1">Требуют внимания</div>
 
@@ -459,8 +462,11 @@
 
                   {filtered.map((f, index) => (
 
-                    <div key={f.id  index} className="group p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-[20.09.2026 14:01] Адам | FF.🔸: {/* Название и ИНН (фиксированная ширина для ровности) */}
+                    <div key={f.id || index} className="group p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+                      
+
+                      {/* Название и ИНН (фиксированная ширина для ровности) */}
 
                       <div className="lg:w-72 shrink-0">
 
@@ -490,7 +496,7 @@
 
                         <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
 
-                          <div className={absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-full} style={{ width: ${f.pct}% }}></div>
+                          <div className={`absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-full`} style={{ width: `${f.pct}%` }}></div>
 
                         </div>
 
@@ -510,7 +516,7 @@
 
                         </div>
 
-                        <span className={text-xs font-semibold px-3 py-1.5 rounded-xl border text-center min-w-[100px] ${f.badge}}>{f.label}</span>
+                        <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border text-center min-w-[100px] ${f.badge}`}>{f.label}</span>
 
                       </div>
 
@@ -542,4 +548,5 @@
 
 </body>
 
-</html>
+</html> 
+
