@@ -16,6 +16,7 @@
       color: #f8fafc;
     }
     
+    /* Эффект матового стекла */
     .glass-card {
       background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(16px);
@@ -33,6 +34,7 @@
       transform: translateY(-2px);
     }
 
+    /* Градиентный фоновый паттерн */
     .bg-grid {
       background-size: 32px 32px;
       background-image: 
@@ -40,6 +42,7 @@
         linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     }
 
+    /* Анимация появления Toast */
     @keyframes popIn {
       from { transform: translateY(100%) scale(0.9); opacity: 0; }
       to { transform: translateY(0) scale(1); opacity: 1; }
@@ -51,56 +54,30 @@
 </head>
 <body class="bg-[#090d16] text-slate-100 antialiased selection:bg-indigo-500 selection:text-white relative min-h-screen overflow-x-hidden bg-grid">
 
+  <!-- Декоративное неоновое свечение на фоне -->
   <div class="fixed -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] pointer-events-none"></div>
   <div class="fixed top-1/3 -right-40 w-96 h-96 bg-emerald-500/15 rounded-full blur-[128px] pointer-events-none"></div>
 
   <div id="root"></div>
 
-  <!-- Модуль Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBKAxwszUZFbB-D6TN2CKh7NDHY2xPvQjc",
-      authDomain: "point-ea352.firebaseapp.com",
-      projectId: "point-ea352",
-      storageBucket: "point-ea352.firebasestorage.app",
-      messagingSenderId: "752287319754",
-      appId: "1:752287319754:web:d2618aa6339ebe66c25633",
-      measurementId: "G-V8M2JHWSMC"
-    };
-
-    try {
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-
-      window.FOP_AUTH = {
-        auth,
-        login: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
-        logout: () => signOut(auth),
-        onAuth: (cb) => onAuthStateChanged(auth, cb)
-      };
-      
-      window.dispatchEvent(new CustomEvent('fop-firebase-init'));
-    } catch (e) {
-      console.error("Firebase Init Error:", e);
-    }
-  </script>
-
-  <!-- Приложение React -->
   <script type="text/babel">
-    const ANNUAL_LIMIT = 7211598;
+    const ANNUAL_LIMIT = 7211598; // Лимит 2 группы на 2026 год
     const API_URL = "https://script.google.com/macros/s/AKfycbz_jNqlXVuO2m9fNQ39-n6m38wY2a16UDOT7LULgmymV1cBRRojozx9ndK4HJpaVoeO/exec?token=my-secure-fop-token-2026";
+    
+    // Список разрешённых паролей для входа
+    const ALLOWED_PASSWORDS = [
+      "K25dFa00GZ5pRDaRBPvY",
+      "PassCode2026_Team",
+      "AdminAccess_998"
+      // Добавьте сюда нужные пароли
+    ];
 
     function App() {
-      const [user, setUser] = React.useState(null);
-      const [authChecking, setAuthChecking] = React.useState(true);
-
-      const [emailInput, setEmailInput] = React.useState("");
+      const [isAuthenticated, setIsAuthenticated] = React.useState(() => {
+        return sessionStorage.getItem("fop_auth") === "true";
+      });
       const [passwordInput, setPasswordInput] = React.useState("");
-      const [isSubmitting, setIsSubmitting] = React.useState(false);
-      const [errorMsg, setErrorMsg] = React.useState("");
+      const [errorMsg, setErrorMsg] = React.useState(false);
 
       const [fops, setFops] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
@@ -111,33 +88,6 @@
       const [sortOrder, setSortOrder] = React.useState("desc");
 
       const [toast, setToast] = React.useState({ show: false, message: "" });
-
-      React.useEffect(() => {
-        const setupListener = () => {
-          if (window.FOP_AUTH && window.FOP_AUTH.onAuth) {
-            window.FOP_AUTH.onAuth((currentUser) => {
-              setUser(currentUser);
-              setAuthChecking(false);
-            });
-          }
-        };
-
-        if (window.FOP_AUTH) {
-          setupListener();
-        } else {
-          window.addEventListener('fop-firebase-init', setupListener);
-        }
-
-        // Страховочный таймаут (на случай торможения сети)
-        const timeout = setTimeout(() => {
-          setAuthChecking(false);
-        }, 4000);
-
-        return () => {
-          window.removeEventListener('fop-firebase-init', setupListener);
-          clearTimeout(timeout);
-        };
-      }, []);
 
       const showToast = (message) => {
         setToast({ show: true, message });
@@ -167,60 +117,27 @@
         }
       };
 
-      const handleLogin = async (e) => {
+      const handleLogin = (e) => {
         e.preventDefault();
-        setErrorMsg("");
-        setIsSubmitting(true);
-
-        if (!window.FOP_AUTH) {
-          setErrorMsg("Сервис авторизации Firebase еще не загрузился. Обновите страницу.");
-          setIsSubmitting(false);
-          return;
-        }
-
-        try {
-          await window.FOP_AUTH.login(emailInput.trim(), passwordInput);
-        } catch (error) {
-          console.error("Auth error:", error);
-          if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-            setErrorMsg("Неверный Email или пароль 🔥");
-          } else if (error.code === 'auth/unauthorized-domain') {
-            setErrorMsg("Домен fop-limits-dashboard.vercel.app не добавлен в разрешенные в Firebase Console!");
-          } else {
-            setErrorMsg("Ошибка авторизации: " + (error.message || "попробуйте снова"));
-          }
-        } finally {
-          setIsSubmitting(false);
-        }
-      };
-
-      const handleLogout = async () => {
-        if (window.FOP_AUTH && window.FOP_AUTH.logout) {
-          await window.FOP_AUTH.logout();
+        // Проверяем, есть ли введённый пароль в массиве ALLOWED_PASSWORDS
+        if (ALLOWED_PASSWORDS.includes(passwordInput.trim())) {
+          sessionStorage.setItem("fop_auth", "true");
+          setIsAuthenticated(true);
+        } else {
+          setErrorMsg(true);
         }
       };
 
       React.useEffect(() => {
-        if (user) {
+        if (isAuthenticated) {
           setLoading(true);
           fetchSheetData();
           const interval = setInterval(() => fetchSheetData(false), 15000);
           return () => clearInterval(interval);
         }
-      }, [user]);
+      }, [isAuthenticated]);
 
-      if (authChecking) {
-        return (
-          <div className="min-h-screen flex items-center justify-center p-4 relative z-10 text-slate-400 text-sm font-semibold">
-            <div className="flex items-center gap-3 glass-card px-6 py-4 rounded-2xl">
-              <span className="w-3 h-3 rounded-full bg-indigo-500 animate-ping"></span>
-              <span>Подключение к Firebase...</span>
-            </div>
-          </div>
-        );
-      }
-
-      if (!user) {
+      if (!isAuthenticated) {
         return (
           <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
             <div className="glass-card p-8 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl">
@@ -229,48 +146,23 @@
                   ⚡
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold tracking-tight text-white">FOP Control 2026</h1>
-                  <p className="text-xs text-slate-400">Авторизация через Firebase Console</p>
+                  <h1 className="text-xl font-bold tracking-tight text-white">Добро пожаловать</h1>
+                  <p className="text-xs text-slate-400">Введите пароль команды</p>
                 </div>
               </div>
-
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Email пользователя</label>
-                  <input 
-                    type="email" 
-                    required
-                    placeholder="admin@yourdomain.com" 
-                    value={emailInput}
-                    onChange={(e) => { setEmailInput(e.target.value); setErrorMsg(""); }}
-                    className="w-full px-4 py-3 text-sm bg-slate-900/80 border border-slate-700/60 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition text-white placeholder-slate-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Пароль</label>
                   <input 
                     type="password" 
-                    required
                     placeholder="••••••••••••••••" 
                     value={passwordInput}
-                    onChange={(e) => { setPasswordInput(e.target.value); setErrorMsg(""); }}
+                    onChange={(e) => { setPasswordInput(e.target.value); setErrorMsg(false); }}
                     className="w-full px-4 py-3 text-sm bg-slate-900/80 border border-slate-700/60 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition text-white placeholder-slate-600"
                   />
+                  {errorMsg && <p className="text-xs text-rose-400 mt-2 font-medium">Неверный пароль 🔥</p>}
                 </div>
-
-                {errorMsg && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl">
-                    <p className="text-xs text-rose-400 font-medium leading-relaxed">{errorMsg}</p>
-                  </div>
-                )}
-
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="w-full py-3 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 active:scale-[0.98] text-white text-sm font-bold rounded-xl transition shadow-lg shadow-indigo-500/25 disabled:opacity-50"
-                >
-                  {isSubmitting ? "Проверка данных..." : "Войти в систему"}
+                <button type="submit" className="w-full py-3 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 active:scale-[0.98] text-white text-sm font-bold rounded-xl transition shadow-lg shadow-indigo-500/25">
+                  Войти в панель
                 </button>
               </form>
             </div>
@@ -312,6 +204,8 @@
 
       return (
         <div className="flex min-h-screen relative z-10">
+          
+          {/* TOAST NOTIFICATION */}
           {toast.show && (
             <div className="fixed bottom-6 right-6 z-50 animate-toast">
               <div className="glass-card text-white px-4 py-3 rounded-2xl shadow-2xl border border-indigo-500/30 flex items-center gap-2.5 text-xs font-semibold backdrop-blur-2xl">
@@ -321,26 +215,16 @@
             </div>
           )}
 
+          {/* SIDEBAR */}
           <aside className="w-72 glass-card border-r border-white/5 p-6 hidden lg:flex flex-col justify-between rounded-r-3xl my-4 ml-4">
             <div>
-              <div className="flex items-center gap-3.5 mb-8 px-2">
+              <div className="flex items-center gap-3.5 mb-10 px-2">
                 <div className="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-violet-500 rounded-2xl flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-indigo-500/30">⚡</div>
                 <div>
                   <span className="font-extrabold text-white tracking-tight text-base block">FOP Control</span>
                   <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Dashboard 2026</span>
                 </div>
               </div>
-
-              <div className="mb-6 p-3 rounded-xl bg-slate-900/60 border border-white/5 flex items-center justify-between">
-                <div className="truncate pr-2">
-                  <div className="text-[10px] text-slate-400 font-semibold">Пользователь</div>
-                  <div className="text-xs font-bold text-slate-200 truncate">{user.email}</div>
-                </div>
-                <button onClick={handleLogout} title="Выйти" className="text-slate-400 hover:text-rose-400 transition p-1">
-                  🚪
-                </button>
-              </div>
-
               <nav className="space-y-1.5 text-xs font-semibold">
                 <a href="#" className="flex items-center gap-3 px-4 py-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-xl transition">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
@@ -355,6 +239,7 @@
             </div>
           </aside>
 
+          {/* MAIN CONTENT */}
           <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto overflow-hidden">
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-white/5">
               <div>
@@ -370,12 +255,10 @@
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 
                   <span className="text-[11px]">{lastSync}</span>
                 </div>
-                <button onClick={handleLogout} className="lg:hidden text-xs px-3 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl transition font-semibold">
-                  Выйти
-                </button>
               </div>
             </header>
 
+            {/* МЕТРИКИ */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="glass-card p-5 rounded-2xl border border-white/5">
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Красная зона 🔥</div>
@@ -402,9 +285,11 @@
               </div>
             </div>
 
+            {/* ОСНОВНОЙ БЛОК */}
             <div className="glass-card rounded-3xl p-6 border border-white/5">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 
+                {/* Фильтры */}
                 <div className="flex flex-wrap gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/5 text-xs font-semibold">
                   {[
                     { id: "all", label: "Все" },
@@ -419,6 +304,7 @@
                   ))}
                 </div>
 
+                {/* Поиск и кнопки управления */}
                 <div className="flex items-center gap-2 w-full md:w-auto">
                   <button 
                     onClick={() => fetchSheetData(true)} 
@@ -451,6 +337,7 @@
                 </div>
               </div>
 
+              {/* СПИСОК ФОП */}
               {loading && !isSyncing ? (
                 <div className="text-center py-20 text-slate-500 text-sm font-medium">Загружаем обновлённые данные... ⏳</div>
               ) : filtered.length === 0 ? (
@@ -459,6 +346,8 @@
                 <div className="space-y-3">
                   {filtered.map((f, index) => (
                     <div key={f.id || index} className="glass-card glass-card-hover p-4.5 rounded-2xl border border-white/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      
+                      {/* Данные ФОП */}
                       <div className="lg:w-80 shrink-0 space-y-1">
                         <div 
                           onClick={() => copyToClipboard(f.name, "Название ФОП")}
@@ -486,12 +375,14 @@
                           </button>
                         </div>
 
+                        {/* Чипсы банков */}
                         <div className="text-[11px] text-slate-400 pt-0.5 flex items-center gap-1.5 truncate">
                           <span className="text-slate-500">🏦</span>
                           <span className="truncate font-semibold text-slate-300">{f.banks}</span>
                         </div>
                       </div>
                       
+                      {/* Шкала заполнения */}
                       <div className="flex-1 max-w-xl space-y-1.5">
                         <div className="flex justify-between items-center text-[11px]">
                           <span className="font-semibold text-slate-400">Остаток: <strong className="text-white">{new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴</strong></span>
@@ -502,6 +393,7 @@
                         </div>
                       </div>
 
+                      {/* Расходы & Бейдж */}
                       <div className="flex items-center gap-4 justify-between lg:justify-end shrink-0">
                         <div className="text-right">
                           <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Расход за год</div>
