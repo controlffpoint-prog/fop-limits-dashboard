@@ -34,6 +34,7 @@
       const [lastSync, setLastSync] = React.useState("Синхронизация...");
       const [search, setSearch] = React.useState("");
       const [filter, setFilter] = React.useState("all");
+      const [sortOrder, setSortOrder] = React.useState("desc"); // "desc" — сначала больше, "asc" — сначала меньше
 
       const fetchSheetData = async () => {
         try {
@@ -112,9 +113,15 @@
           return { ...fop, turnover, pct, remaining, cat, label, badge, bar };
         });
 
-        // Сортировка по умолчанию для вкладки "Все": от большего остатка к меньшему
-        return list.sort((a, b) => b.remaining - a.remaining);
-      }, [fops]);
+        // Динамическая сортировка по остатку лимита
+        return list.sort((a, b) => {
+          if (sortOrder === "desc") {
+            return b.remaining - a.remaining; // Сначала больше остаток
+          } else {
+            return a.remaining - b.remaining; // Сначала меньше остаток
+          }
+        });
+      }, [fops, sortOrder]);
 
       const totalTurnover = processed.reduce((a, b) => a + b.turnover, 0);
       const totalFree = processed.length * ANNUAL_LIMIT - totalTurnover;
@@ -190,8 +197,8 @@
 
             {/* Таблица / Список */}
             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-              <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-                <div className="flex gap-1.5 bg-slate-100/80 p-1 rounded-xl text-xs font-medium overflow-x-auto">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div className="flex flex-wrap gap-1.5 bg-slate-100/80 p-1 rounded-xl text-xs font-medium">
                   {[
                     { id: "all", label: "Все" },
                     { id: "critical", label: "Критично" },
@@ -208,17 +215,36 @@
                     </button>
                   ))}
                 </div>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                  </span>
-                  <input 
-                    type="text" 
-                    placeholder="Поиск по ФОП..." 
-                    value={search} 
-                    onChange={e => setSearch(e.target.value)} 
-                    className="pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:bg-white transition w-full sm:w-64" 
-                  />
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  {/* Кнопка переключения сортировки */}
+                  <button 
+                    onClick={() => setSortOrder(prev => prev === "desc" ? "asc" > "desc" ? "desc" : "asc" : prev === "desc" ? "asc" : "desc")} 
+                    title="Изменить порядок сортировки по остатку"
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition"
+                  >
+                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {sortOrder === "desc" ? (
+                        <path strokeLinecap="round" strokeLinejoin="round5" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                      )}
+                    </svg>
+                    <span>{sortOrder === "desc" ? "Больше остаток" : "Меньше остаток"}</span>
+                  </button>
+
+                  <div className="relative flex-1 sm:flex-initial">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </span>
+                    <input 
+                      type="text" 
+                      placeholder="Поиск по ФОП..." 
+                      value={search} 
+                      onChange={e => setSearch(e.target.value)} 
+                      className="pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:bg-white transition w-full sm:w-56" 
+                    />
+                  </div>
                 </div>
               </div>
 
