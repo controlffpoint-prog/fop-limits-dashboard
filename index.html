@@ -101,16 +101,19 @@
       }
 
       const processed = React.useMemo(() => {
-        return (fops || []).map(fop => {
+        const list = (fops || []).map(fop => {
           const turnover = Number(fop.turnover) || 0;
           const pct = Math.min(100, Number(((turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
           const remaining = ANNUAL_LIMIT - turnover;
           let cat = "safe", label = "Запас", badge = "bg-emerald-50 text-emerald-700 border-emerald-200/60", bar = "bg-emerald-500";
-          if (pct >= 90) { cat = "critical"; label = "Критично"; badge = "bg-rose-50 text-rose-600 border-rose-200/60", bar = "bg-rose-500"; }
-          else if (pct >= 80) { cat = "high"; label = "Высокий риск"; badge = "bg-amber-50 text-amber-700 border-amber-200/60", bar = "bg-amber-500"; }
-          else if (pct >= 70) { cat = "watch"; label = "Следить"; badge = "bg-yellow-50 text-yellow-700 border-yellow-200/60", bar = "bg-yellow-400"; }
+          if (pct >= 90) { cat = "critical"; label = "Критично"; badge = "bg-rose-50 text-rose-600 border-rose-200/60"; bar = "bg-rose-500"; }
+          else if (pct >= 80) { cat = "high"; label = "Высокий риск"; badge = "bg-amber-50 text-amber-700 border-amber-200/60"; bar = "bg-amber-500"; }
+          else if (pct >= 70) { cat = "watch"; label = "Следить"; badge = "bg-yellow-50 text-yellow-700 border-yellow-200/60"; bar = "bg-yellow-400"; }
           return { ...fop, turnover, pct, remaining, cat, label, badge, bar };
         });
+
+        // Сортировка по умолчанию для вкладки "Все": от большего остатка к меньшему
+        return list.sort((a, b) => b.remaining - a.remaining);
       }, [fops]);
 
       const totalTurnover = processed.reduce((a, b) => a + b.turnover, 0);
