@@ -101,15 +101,14 @@
         );
       }
 
-      // Группируем по ФОП (ІПН), а внутри сохраняем все задействованные банки раздельно
       const processed = React.useMemo(() => {
         const map = {};
 
         (fops || []).forEach(item => {
-          const innKey = (item.inn && item.inn.trim() !== "") ? item.inn.trim() : item.name;
-          if (!map[innKey]) {
-            map[innKey] = {
-              id: item.id || innKey,
+          const key = (item.inn && item.inn.trim() !== "") ? item.inn.trim() : item.name;
+          if (!map[key]) {
+            map[key] = {
+              id: item.id || key,
               name: item.name,
               inn: item.inn,
               banksBreakdown: []
@@ -119,12 +118,11 @@
           const bankName = item.banks && item.banks.trim() !== "" ? item.banks.trim() : "Основной счет";
           const turnoverVal = Number(item.turnover) || 0;
           
-          // Проверяем, есть ли уже такой банк у этого ФОПа, если нет — добавляем
-          const existingBank = map[innKey].banksBreakdown.find(b => b.bank.toLowerCase() === bankName.toLowerCase());
+          const existingBank = map[key].banksBreakdown.find(b => b.bank.toLowerCase() === bankName.toLowerCase());
           if (existingBank) {
             existingBank.turnover += turnoverVal;
           } else {
-            map[innKey].banksBreakdown.push({ bank: bankName, turnover: turnoverVal });
+            map[key].banksBreakdown.push({ bank: bankName, turnover: turnoverVal });
           }
         });
 
@@ -164,7 +162,6 @@
 
       return (
         <div className="flex min-h-screen bg-[#f8fafc]">
-          {/* Боковая панель */}
           <aside className="w-72 bg-white border-r border-slate-200/80 p-6 hidden lg:flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-3 mb-10 px-2">
@@ -187,7 +184,6 @@
             </div>
           </aside>
 
-          {/* Основной контент */}
           <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto overflow-hidden">
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-slate-200/60">
               <div>
@@ -211,7 +207,6 @@
               </div>
             </header>
 
-            {/* Карточки метрик */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
                 <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">В красной зоне</div>
@@ -235,7 +230,6 @@
               </div>
             </div>
 
-            {/* Таблица / Список */}
             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div className="flex flex-wrap gap-1.5 bg-slate-100/80 p-1 rounded-xl text-xs font-medium">
@@ -299,7 +293,6 @@
                   {filtered.map(f => (
                     <div key={f.id} className="group p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       
-                      {/* Информация о ФОПе */}
                       <div className="lg:w-1/3">
                         <div className="font-bold text-sm text-slate-900 group-hover:text-blue-600 transition">{f.name}</div>
                         <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
@@ -307,7 +300,6 @@
                         </div>
                       </div>
                       
-                      {/* Общий прогресс-бар лимита + разбивка по банкам под ним */}
                       <div className="lg:w-2/5 space-y-2">
                         <div>
                           <div className="flex justify-between items-center text-[11px] mb-1">
@@ -319,7 +311,6 @@
                           </div>
                         </div>
 
-                        {/* Список всех банков (NovaPay и Моно) с оборотами */}
                         <div className="space-y-1.5 pt-1 border-t border-slate-100">
                           {f.banksBreakdown.map((b, idx) => {
                             const bankPct = Math.min(100, Number(((b.turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
@@ -338,7 +329,6 @@
                         </div>
                       </div>
 
-                      {/* Общий оборот и статус */}
                       <div className="flex items-center gap-3 justify-end lg:w-auto">
                         <div className="text-right hidden sm:block">
                           <div className="text-[10px] uppercase font-semibold text-slate-400">Разом оборот</div>
