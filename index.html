@@ -60,16 +60,35 @@
 
   <div id="root"></div>
 
+  <!-- Подключение SDK Firebase (модульная загрузка через ES-модули) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKAxwszUZFbB-D6TN2CKh7NDHY2xPvQjc",
+      authDomain: "point-ea352.firebaseapp.com",
+      projectId: "point-ea352",
+      storageBucket: "point-ea352.firebasestorage.app",
+      messagingSenderId: "752287319754",
+      appId: "1:752287319754:web:d2618aa6339ebe66c25633",
+      measurementId: "G-V8M2JHWSMC"
+    };
+
+    // Инициализация Firebase и Аналитики
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+
   <script type="text/babel">
     const ANNUAL_LIMIT = 7211598; // Лимит 2 группы на 2026 год
     const API_URL = "https://script.google.com/macros/s/AKfycbz_jNqlXVuO2m9fNQ39-n6m38wY2a16UDOT7LULgmymV1cBRRojozx9ndK4HJpaVoeO/exec?token=my-secure-fop-token-2026";
     
-    // Список разрешённых паролей для входа
+    // Множество разрешённых паролей для входа (открытый пароль убран из константы)
     const ALLOWED_PASSWORDS = [
-      "K25dFa00GZ5pRDaRBPvY",
       "PassCode2026_Team",
       "AdminAccess_998"
-      // Добавьте сюда нужные пароли
+      // Добавьте сюда актуальные пароли для команды
     ];
 
     function App() {
@@ -119,7 +138,6 @@
 
       const handleLogin = (e) => {
         e.preventDefault();
-        // Проверяем, есть ли введённый пароль в массиве ALLOWED_PASSWORDS
         if (ALLOWED_PASSWORDS.includes(passwordInput.trim())) {
           sessionStorage.setItem("fop_auth", "true");
           setIsAuthenticated(true);
