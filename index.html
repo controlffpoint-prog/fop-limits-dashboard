@@ -112,14 +112,13 @@
               id: item.id || key,
               name: item.name,
               inn: item.inn,
-              banksBreakdown: [] // список банков и их оборотов
+              banksBreakdown: []
             };
           }
           
           const bankName = item.banks && item.banks.trim() !== "" ? item.banks.trim() : "Основной счет";
           const turnoverVal = Number(item.turnover) || 0;
           
-          // Проверяем, может этот банк уже записан, тогда суммируем (на всякий случай)
           const existingBank = map[key].banksBreakdown.find(b => b.bank === bankName);
           if (existingBank) {
             existingBank.turnover += turnoverVal;
@@ -303,7 +302,6 @@
                         <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-1.5">
                           <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-slate-600">ІПН {f.inn || "—"}</span>
                           <span>•</span>
-                          {/* Красивый вывод банков и их сумм внутри карточки ФОПа */}
                           <div className="inline-flex flex-wrap gap-1">
                             {f.banksBreakdown.map((b, idx) => (
                               <span key={idx} className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[11px] font-medium">
@@ -339,7 +337,7 @@
       );
     }
 
-    ReactDOM.createRoot(getElementById("root")).render(<App />);
+    document.getElementById("root") && ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
 </html>
