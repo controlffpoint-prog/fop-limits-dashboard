@@ -41,12 +41,7 @@
           const response = await fetch(API_URL);
           const result = await response.json();
           if (result && result.status === "success" && Array.isArray(result.data)) {
-            // Фильтруем мусор на клиенте
-            const cleanData = result.data.filter(item => {
-              const name = String(item.name || "").toLowerCase();
-              return name && !name.includes("№") && !name.includes("облік") && !name.includes("інн") && !name.includes("разом");
-            });
-            setFops(cleanData);
+            setFops(result.data);
             setLastSync(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
           }
         } catch (e) {
@@ -107,42 +102,26 @@
       }
 
       const processed = React.useMemo(() => {
-        const map = {};
-
-        (fops || []).forEach(item => {
-          const nameStr = String(item.name || "").trim();
-          const innStr = String(item.inn || "").trim();
-          const key = innStr !== "" ? innStr : nameStr;
-          
-          if (!map[key]) {
-            map[key] = {
-              id: item.id || key,
-              name: nameStr,
-              inn: innStr,
-              banksBreakdown: []
-            };
-          }
-          
-          const bankName = item.banks && String(item.banks).trim() !== "" ? String(item.banks).trim() : "Основной счет";
-          const turnoverVal = Number(item.turnover) || 0;
-          
-          const existingBank = map[key].banksBreakdown.find(b => b.bank.toLowerCase() === bankName.toLowerCase());
-          if (existingBank) {
-            existingBank.turnover += turnoverVal;
-          } else {
-            map[key].banksBreakdown.push({ bank: bankName, turnover: turnoverVal });
-          }
-        });
-
-        const list = Object.values(map).map(fop => {
-          const turnover = fop.banksBreakdown.reduce((sum, b) => sum + b.turnover, 0);
+        const list = (fops || []).map(item => {
+          const turnover = Number(item.turnover) || 0;
           const pct = Math.min(100, Number(((turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
           const remaining = ANNUAL_LIMIT - turnover;
+          
           let cat = "safe", label = "Запас", badge = "bg-emerald-50 text-emerald-700 border-emerald-200/60", bar = "bg-emerald-500";
           if (pct >= 90) { cat = "critical"; label = "Критично"; badge = "bg-rose-50 text-rose-600 border-rose-200/60"; bar = "bg-rose-500"; }
           else if (pct >= 80) { cat = "high"; label = "Высокий риск"; badge = "bg-amber-50 text-amber-700 border-amber-200/60"; bar = "bg-amber-500"; }
           else if (pct >= 70) { cat = "watch"; label = "Следить"; badge = "bg-yellow-50 text-yellow-700 border-yellow-200/60"; bar = "bg-yellow-400"; }
-          return { ...fop, turnover, pct, remaining, cat, label, badge, bar };
+          
+          return {
+            ...item,
+            turnover,
+            pct,
+            remaining,
+            cat,
+            label,
+            badge,
+            bar
+          };
         });
 
         return list.sort((a, b) => {
@@ -161,8 +140,7 @@
         const query = String(search || "").toLowerCase();
         const matchName = String(f.name || "").toLowerCase().includes(query);
         const matchInn = String(f.inn || "").toLowerCase().includes(query);
-        const matchBank = f.banksBreakdown.some(b => String(b.bank || "").toLowerCase().includes(query));
-        const matchesSearch = matchName || matchInn || matchBank;
+        const matchesSearch = matchName || matchInn;
         return filter === "all" ? matchesSearch : matchesSearch && f.cat === filter;
       });
 
@@ -196,7 +174,7 @@
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-slate-200/60">
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">Обзор лимитов ФОП</h1>
-                <p className="text-xs text-slate-500 mt-0.5">Оперативный контроль общих лимитов и оборотов по банкам • 2026 год</p>
+                <p className="text-xs text-slate-500 mt-0.5">Оперативный контроль общих лимитов и оборотов • 2026 год</p>
               </div>
               <div className="flex items-center gap-3">
                 <a 
@@ -280,7 +258,7 @@
                     </span>
                     <input 
                       type="text" 
-                      placeholder="Поиск по ФОП, ІПН или банку..." 
+                      placeholder="Поиск по ФОП или ІПН..." 
                       value={search} 
                       onChange={e => setSearch(e.target.value)} 
                       className="pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:bg-white transition w-full sm:w-60" 
@@ -299,47 +277,28 @@
               ) : (
                 <div className="space-y-3">
                   {filtered.map(f => (
-                    <div key={f.id} className="group p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div key={f.id} className="group p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       
-                      <div className="lg:w-1/3">
+                      <div>
                         <div className="font-bold text-sm text-slate-900 group-hover:text-blue-600 transition">{f.name}</div>
                         <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
                           <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-slate-600">ІПН {f.inn || "—"}</span>
                         </div>
                       </div>
                       
-                      <div className="lg:w-2/5 space-y-2">
-                        <div>
-                          <div className="flex justify-between items-center text-[11px] mb-1">
-                            <span className="font-semibold text-slate-600">Общий лимит (остаток {new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴)</span>
-                            <span className="font-bold text-slate-900">{f.pct}%</span>
-                          </div>
-                          <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                            <div className={`absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-full`} style={{ width: `${f.pct}%` }}></div>
-                          </div>
+                      <div className="sm:w-1/2 space-y-1.5">
+                        <div className="flex justify-between items-center text-[11px] mb-1">
+                          <span className="font-semibold text-slate-600">Общий лимит (остаток {new Intl.NumberFormat("ru-RU").format(f.remaining)} ₴)</span>
+                          <span className="font-bold text-slate-900">{f.pct}%</span>
                         </div>
-
-                        <div className="space-y-1.5 pt-1 border-t border-slate-100">
-                          {f.banksBreakdown.map((b, idx) => {
-                            const bankPct = Math.min(100, Number(((b.turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
-                            return (
-                              <div key={idx} className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                <div className="flex justify-between items-center text-[10px] mb-1">
-                                  <span className="font-semibold text-slate-700">{b.bank}</span>
-                                  <span className="font-bold text-slate-900">{new Intl.NumberFormat("ru-RU").format(b.turnover)} ₴ ({bankPct}%)</span>
-                                </div>
-                                <div className="relative w-full h-1.5 bg-slate-200/70 rounded-full overflow-hidden">
-                                  <div className="absolute left-0 top-0 bottom-0 bg-blue-500 rounded-full transition-all duration-300" style={{ width: `${bankPct}%` }}></div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                        <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`absolute left-0 top-0 bottom-0 ${f.bar} transition-all duration-500 rounded-full`} style={{ width: `${f.pct}%` }}></div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 justify-end lg:w-auto">
-                        <div className="text-right hidden sm:block">
-                          <div className="text-[10px] uppercase font-semibold text-slate-400">Разом оборот</div>
+                      <div className="flex items-center gap-3 justify-between sm:justify-end">
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase font-semibold text-slate-400">Оборот за год</div>
                           <div className="text-xs font-bold text-slate-800">{new Intl.NumberFormat("ru-RU").format(f.turnover)} ₴</div>
                         </div>
                         <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${f.badge}`}>{f.label}</span>
