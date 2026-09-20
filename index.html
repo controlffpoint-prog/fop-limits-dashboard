@@ -105,17 +105,20 @@
         const map = {};
 
         (fops || []).forEach(item => {
-          const key = (item.inn && item.inn.trim() !== "") ? item.inn.trim() : item.name;
+          const nameStr = String(item.name || "").trim();
+          const innStr = String(item.inn || "").trim();
+          const key = innStr !== "" ? innStr : nameStr;
+          
           if (!map[key]) {
             map[key] = {
               id: item.id || key,
-              name: item.name,
-              inn: item.inn,
+              name: nameStr,
+              inn: innStr,
               banksBreakdown: []
             };
           }
           
-          const bankName = item.banks && item.banks.trim() !== "" ? item.banks.trim() : "Основной счет";
+          const bankName = item.banks && String(item.banks).trim() !== "" ? String(item.banks).trim() : "Основной счет";
           const turnoverVal = Number(item.turnover) || 0;
           
           const existingBank = map[key].banksBreakdown.find(b => b.bank.toLowerCase() === bankName.toLowerCase());
@@ -150,10 +153,10 @@
       const totalFree = processed.length * ANNUAL_LIMIT - totalTurnover;
 
       const filtered = processed.filter(f => {
-        const query = search.toLowerCase();
-        const matchName = (f.name || "").toLowerCase().includes(query);
-        const matchInn = (f.inn || "").toLowerCase().includes(query);
-        const matchBank = f.banksBreakdown.some(b => b.bank.toLowerCase().includes(query));
+        const query = String(search || "").toLowerCase();
+        const matchName = String(f.name || "").toLowerCase().includes(query);
+        const matchInn = String(f.inn || "").toLowerCase().includes(query);
+        const matchBank = f.banksBreakdown.some(b => String(b.bank || "").toLowerCase().includes(query));
         const matchesSearch = matchName || matchInn || matchBank;
         return filter === "all" ? matchesSearch : matchesSearch && f.cat === filter;
       });
