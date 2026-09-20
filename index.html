@@ -52,7 +52,7 @@
 
   <div id="root"></div>
 
-  <!-- FIREBASE SDK -->
+  <!-- FIREBASE SDK & APP INITIALIZATION -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -71,6 +71,7 @@
     const auth = getAuth(app);
 
     window.firebaseAuth = { auth, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+    window.dispatchEvent(new Event('firebase-ready'));
   </script>
 
   <script type="text/babel">
@@ -95,16 +96,22 @@
       const [toast, setToast] = React.useState({ show: false, message: "" });
 
       React.useEffect(() => {
-        const interval = setInterval(() => {
+        const initAuth = () => {
           if (window.firebaseAuth) {
-            clearInterval(interval);
             const { auth, onAuthStateChanged } = window.firebaseAuth;
             onAuthStateChanged(auth, (currentUser) => {
               setUser(currentUser);
               setAuthChecking(false);
             });
           }
-        }, 100);
+        };
+
+        if (window.firebaseAuth) {
+          initAuth();
+        } else {
+          window.addEventListener('firebase-ready', initAuth);
+          return () => window.removeEventListener('firebase-ready', initAuth);
+        }
       }, []);
 
       const showToast = (message) => {
