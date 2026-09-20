@@ -101,15 +101,15 @@
         );
       }
 
-      // Группируем по ФОП (по ІПН или имени), собирая все банки из строк таблиц
+      // Группируем по ФОП (ІПН), а внутри сохраняем все задействованные банки раздельно
       const processed = React.useMemo(() => {
         const map = {};
 
         (fops || []).forEach(item => {
-          const key = (item.inn && item.inn.trim() !== "") ? item.inn.trim() : item.name;
-          if (!map[key]) {
-            map[key] = {
-              id: item.id || key,
+          const innKey = (item.inn && item.inn.trim() !== "") ? item.inn.trim() : item.name;
+          if (!map[innKey]) {
+            map[innKey] = {
+              id: item.id || innKey,
               name: item.name,
               inn: item.inn,
               banksBreakdown: []
@@ -119,12 +119,12 @@
           const bankName = item.banks && item.banks.trim() !== "" ? item.banks.trim() : "Основной счет";
           const turnoverVal = Number(item.turnover) || 0;
           
-          // Аккумулируем данные по каждому конкретному банку, если записей несколько
-          const existingBank = map[key].banksBreakdown.find(b => b.bank.toLowerCase() === bankName.toLowerCase());
+          // Проверяем, есть ли уже такой банк у этого ФОПа, если нет — добавляем
+          const existingBank = map[innKey].banksBreakdown.find(b => b.bank.toLowerCase() === bankName.toLowerCase());
           if (existingBank) {
             existingBank.turnover += turnoverVal;
           } else {
-            map[key].banksBreakdown.push({ bank: bankName, turnover: turnoverVal });
+            map[innKey].banksBreakdown.push({ bank: bankName, turnover: turnoverVal });
           }
         });
 
@@ -319,7 +319,7 @@
                           </div>
                         </div>
 
-                        {/* Список всех банков (например, NovaPay и Монобанк) с оборотами */}
+                        {/* Список всех банков (NovaPay и Моно) с оборотами */}
                         <div className="space-y-1.5 pt-1 border-t border-slate-100">
                           {f.banksBreakdown.map((b, idx) => {
                             const bankPct = Math.min(100, Number(((b.turnover / ANNUAL_LIMIT) * 100).toFixed(1)));
