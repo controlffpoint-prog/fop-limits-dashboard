@@ -157,35 +157,15 @@
         }
       }, [isAuthenticated]);
 
-      if (!isAuthenticated) {
-        return (
-          <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
-            <div className="glass-card p-8 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl">
-              <div className="flex flex-col items-center text-center mb-7">
-                <img src={LOGO_URI} alt="Point Fulfillment" className="h-12 w-auto mb-4" />
-                <h1 className="text-xl font-bold tracking-tight text-white">Добро пожаловать</h1>
-                <p className="text-xs text-slate-400 mt-1">Введите пароль команды</p>
-              </div>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••••••••••" 
-                    value={passwordInput}
-                    onChange={(e) => { setPasswordInput(e.target.value); setErrorMsg(false); }}
-                    className="w-full px-4 py-3 text-sm bg-slate-900/80 border border-slate-700/60 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition text-white placeholder-slate-600"
-                  />
-                  {errorMsg && <p className="text-xs text-rose-400 mt-2 font-medium">Неверный пароль 🔥</p>}
-                </div>
-                <button type="submit" disabled={isLoggingIn} className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 active:scale-[0.98] text-white text-sm font-bold rounded-xl transition shadow-lg shadow-orange-500/25 disabled:opacity-60">
-                  {isLoggingIn ? "Проверяем…" : "Войти в панель"}
-                </button>
-              </form>
-            </div>
-          </div>
-        );
-      }
-
+      // ВАЖНО: раньше здесь стоял ранний `if (!isAuthenticated) return (...)`
+      // ПЕРЕД этим useMemo — из-за этого на экране входа React вызывал на
+      // один хук меньше, чем на экране дашборда. Это нарушение "Rules of
+      // Hooks" (число хуков должно быть одинаковым на каждом рендере одного
+      // и того же компонента), и именно из-за него после ввода пароля экран
+      // "зависал" — React сбивался и переставал корректно обновлять этот
+      // компонент, пока не помогала полная перезагрузка страницы. Теперь
+      // все хуки (включая этот useMemo) вызываются всегда, а условный показ
+      // экрана входа сделан ПОСЛЕ них — см. ниже.
       const processed = React.useMemo(() => {
         const list = (fops || []).map(item => {
           const turnover = Number(item.turnover) || 0;
@@ -217,6 +197,35 @@
       });
 
       const fmt = v => v >= 1000000 ? (v / 1000000).toFixed(1).replace(".", ",") + " млн" : new Intl.NumberFormat("ru-RU").format(v) + " ₴";
+
+      if (!isAuthenticated) {
+        return (
+          <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
+            <div className="glass-card p-8 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl">
+              <div className="flex flex-col items-center text-center mb-7">
+                <img src={LOGO_URI} alt="Point Fulfillment" className="h-12 w-auto mb-4" />
+                <h1 className="text-xl font-bold tracking-tight text-white">Добро пожаловать</h1>
+                <p className="text-xs text-slate-400 mt-1">Введите пароль команды</p>
+              </div>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••••••••••" 
+                    value={passwordInput}
+                    onChange={(e) => { setPasswordInput(e.target.value); setErrorMsg(false); }}
+                    className="w-full px-4 py-3 text-sm bg-slate-900/80 border border-slate-700/60 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition text-white placeholder-slate-600"
+                  />
+                  {errorMsg && <p className="text-xs text-rose-400 mt-2 font-medium">Неверный пароль 🔥</p>}
+                </div>
+                <button type="submit" disabled={isLoggingIn} className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 active:scale-[0.98] text-white text-sm font-bold rounded-xl transition shadow-lg shadow-orange-500/25 disabled:opacity-60">
+                  {isLoggingIn ? "Проверяем…" : "Войти в панель"}
+                </button>
+              </form>
+            </div>
+          </div>
+        );
+      }
 
       return (
         <div className="flex min-h-screen relative z-10">
