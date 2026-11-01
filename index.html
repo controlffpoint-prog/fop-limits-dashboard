@@ -124,6 +124,7 @@
       // Какие ФОП сейчас сохраняются (пока идёт запись, кнопки этого ФОП заблокированы)
       const [savingAuth, setSavingAuth] = React.useState({});
       const savingCount = React.useRef(0);   // пока >0, автообновление не затирает только что нажатую отметку
+      const [limitEdit, setLimitEdit] = React.useState(null);   // { key, text } — какой ФОП сейчас редактирует месячный лимит
 
       const showToast = (message, type = "ok") => {
         setToast({ show: true, message, type });
@@ -212,6 +213,64 @@
         }
       };
 
+      // Ручной лимит прихода в месяц для ФОП: amount = число или null (вернуть стандартный лимит).
+      // Сайт сразу показывает новое значение, Apps Script записывает его в колонку U напротив названия ФОП.
+      // Возвращает true, если записалось (или уже было таким), false — если нет (тогда значение откатывается).
+      const setMonthLimit = async (f, amount) => {
+        const key = "lim:" + authKeyOf(f);
+        if (savingAuth[key]) return false;
+        const prev = (f.customLimit === undefined || f.customLimit === null) ? null : f.customLimit;
+        if (prev === amount) return true;
+
+        const applyTo = (v) => setFops(list => list.map(x => (x.name === f.name && x.inn === f.inn) ? { ...x, customLimit: v } : x));
+
+        savingCount.current += 1;
+        setSavingAuth(s => ({ ...s, [key]: true }));
+        applyTo(amount);
+        try {
+          const response = await fetch(BASE_API_URL, {
+            method: "POST",
+            body: JSON.stringify({ token: authToken, action: "setLimit", name: f.name, inn: f.inn, limit: amount })
+          });
+          const result = await response.json();
+          if (result && result.status === "success") {
+            showToast(amount === null ? "Лимит сброшен на стандартный" : "Лимит на месяц сохранён");
+            return true;
+          }
+          if (result && result.error === "Unauthorized") {
+            applyTo(prev);
+            sessionStorage.removeItem("fop_token");
+            setAuthToken("");
+            setFetchError("Сессия истекла, войдите заново");
+            return false;
+          }
+          throw new Error((result && result.message) || "Ошибка записи в таблицу");
+        } catch (err) {
+          applyTo(prev);
+          showToast("Не удалось записать лимит: " + (err && err.message ? err.message : "нет соединения"), "error");
+          return false;
+        } finally {
+          savingCount.current -= 1;
+          setSavingAuth(s => { const n = { ...s }; delete n[key]; return n; });
+        }
+      };
+
+      // Разбор введённой суммы: пробелы и запятая допускаются, от 1 до 100 000 000
+      const parseLimitInput = (text) => {
+        const s = String(text || "").replace(/[\s ]/g, "").replace(",", ".");
+        if (!s) return { ok: false };
+        const n = Number(s);
+        if (!isFinite(n) || n <= 0 || n > 100000000) return { ok: false };
+        return { ok: true, value: Math.round(n) };
+      };
+
+      const saveLimitEdit = async (f) => {
+        const parsed = parseLimitInput(limitEdit && limitEdit.text);
+        if (!parsed.ok) { showToast("Введите сумму лимита числом, например 1500000", "error"); return; }
+        const done = await setMonthLimit(f, parsed.value);
+        if (done) setLimitEdit(null);
+      };
+
       const handleLogin = async (e) => {
         e.preventDefault();
         const candidate = passwordInput.trim();
@@ -283,7 +342,11 @@
           }
 
           // --- Месячный лимит и приход за текущий месяц ---
-          const monthLimit = isNew ? NEW_MONTH_LIMIT : MONTH_LIMIT;
+          // Ручной лимит (из таблицы, колонка U) важнее стандартного правила 600 000 / 1 500 000
+          const customLimit = (item.customLimit !== undefined && item.customLimit !== null && Number(item.customLimit) > 0) ? Number(item.customLimit) : null;
+          const limitIsCustom = customLimit !== null;
+          const monthLimit = limitIsCustom ? customLimit : (isNew ? NEW_MONTH_LIMIT : MONTH_LIMIT);
+          const futureMonthLimit = limitIsCustom ? customLimit : MONTH_LIMIT;   // для оставшихся месяцев года и прогноза
           const monthly = Array.isArray(item.monthly) ? item.monthly : null;
           const monthUsed = monthly ? (Number(monthly[curMonth]) || 0) : null;
           const monthFreeRaw = monthUsed === null ? monthLimit : Math.max(0, monthLimit - monthUsed);
@@ -292,11 +355,11 @@
           // Сколько ФОП реально может ещё принять: не больше месячного остатка и не больше годового
           const monthFree = Math.max(0, Math.min(remaining, monthFreeRaw));
           // До конца года: остаток этого месяца + полные месячные лимиты оставшихся месяцев, но не больше годового остатка
-          const yearCapacity = monthFreeRaw + (monthsLeft - 1) * MONTH_LIMIT;
+          const yearCapacity = monthFreeRaw + (monthsLeft - 1) * futureMonthLimit;
           const canReceiveYear = Math.max(0, Math.min(remaining, yearCapacity));
 
           // --- Прогноз: на сколько месяцев хватит годового лимита ---
-          const monthsAtLimit = remaining > 0 ? remaining / MONTH_LIMIT : 0;
+          const monthsAtLimit = remaining > 0 ? remaining / futureMonthLimit : 0;
           let monthsAtPace = null;
           if (monthly) {
             const filled = monthly.slice(0, curMonth + 1).map(Number).filter(v => v > 0);
@@ -317,7 +380,7 @@
 
           return {
             ...item, turnover, pct, remaining, banks, cat, label, badge, bar,
-            openDate, lastCheck, daysSinceCheck, isNew, newUntil, monthLimit, monthUsed, monthPct, monthFree,
+            openDate, lastCheck, daysSinceCheck, isNew, newUntil, monthLimit, limitIsCustom, futureMonthLimit, monthUsed, monthPct, monthFree,
             canReceiveYear, monthsAtLimit, monthsAtPace, toRed, inRedZone
           };
         });
@@ -669,13 +732,68 @@
 
                         {/* Месячный лимит */}
                         <div className="flex justify-between items-center text-[11px] pt-1">
-                          <span className="text-gray-400">
-                            В месяце: <strong className="text-white">{f.monthUsed === null ? "—" : new Intl.NumberFormat("ru-RU").format(f.monthUsed)}</strong> / {new Intl.NumberFormat("ru-RU").format(f.monthLimit)} ₴
+                          <span className="text-gray-400 flex items-center gap-1.5 flex-wrap">
+                            <span>
+                              В месяце: <strong className="text-white">{f.monthUsed === null ? "—" : new Intl.NumberFormat("ru-RU").format(f.monthUsed)}</strong> / {new Intl.NumberFormat("ru-RU").format(f.monthLimit)} ₴
+                            </span>
+                            {f.limitIsCustom && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-brand/10 text-brand border border-brand/30" title="Лимит задан вручную">вручную</span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setLimitEdit({ key: authKeyOf(f), text: String(f.monthLimit) })}
+                              title="Изменить лимит на месяц"
+                              className="text-gray-500 hover:text-brand transition"
+                            >
+                              <i className="fa-solid fa-pen text-[10px]"></i>
+                            </button>
                           </span>
                           <span className={`font-bold ${f.monthPct !== null && f.monthPct >= 100 ? "text-rose-400" : "text-gray-300"}`}>
                             {f.monthPct === null ? "" : `${f.monthPct}%`}
                           </span>
                         </div>
+                        {limitEdit && limitEdit.key === authKeyOf(f) && (
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              autoFocus
+                              value={limitEdit.text}
+                              onChange={(e) => setLimitEdit({ key: limitEdit.key, text: e.target.value })}
+                              onKeyDown={(e) => { if (e.key === "Enter") saveLimitEdit(f); if (e.key === "Escape") setLimitEdit(null); }}
+                              placeholder="напр. 1500000"
+                              className="w-36 bg-gray-900/90 border border-cardBorder rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-brand transition"
+                            />
+                            <span className="text-[10px] text-gray-500">₴ в месяц</span>
+                            <button
+                              type="button"
+                              disabled={!!savingAuth["lim:" + authKeyOf(f)]}
+                              onClick={() => saveLimitEdit(f)}
+                              className="px-2.5 py-1 rounded-lg bg-brand hover:bg-brandHover text-white text-[10px] font-bold flex items-center gap-1 transition disabled:opacity-60"
+                            >
+                              <i className={`fa-solid ${savingAuth["lim:" + authKeyOf(f)] ? "fa-spinner fa-spin" : "fa-check"}`}></i>
+                              <span>Сохранить</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setLimitEdit(null)}
+                              className="px-2.5 py-1 rounded-lg bg-gray-900/90 border border-cardBorder text-gray-400 hover:text-white text-[10px] font-semibold transition"
+                            >
+                              Отмена
+                            </button>
+                            {f.limitIsCustom && (
+                              <button
+                                type="button"
+                                disabled={!!savingAuth["lim:" + authKeyOf(f)]}
+                                onClick={async () => { const done = await setMonthLimit(f, null); if (done) setLimitEdit(null); }}
+                                title="Вернуть стандартный лимит (600 000 для новоствореного, 1 500 000 для остальных)"
+                                className="px-2.5 py-1 rounded-lg bg-gray-900/90 border border-cardBorder text-gray-400 hover:text-brand text-[10px] font-semibold transition disabled:opacity-60"
+                              >
+                                По умолчанию
+                              </button>
+                            )}
+                          </div>
+                        )}
                         {f.monthPct !== null && (
                           <div className="relative w-full h-1.5 bg-gray-900 rounded-full overflow-hidden border border-cardBorder">
                             <div className={`absolute left-0 top-0 bottom-0 rounded-full transition-all duration-500 ${f.monthPct >= 100 ? "bg-rose-500" : f.monthPct >= 80 ? "bg-amber-400" : "bg-brand"}`} style={{ width: `${f.monthPct}%` }}></div>
@@ -688,7 +806,7 @@
                             Можно принять в мес.: <strong className="text-gray-300">{new Intl.NumberFormat("ru-RU").format(f.monthFree)} ₴</strong>
                           </span>
                           <span title={f.monthsAtPace !== null ? `По вашему темпу: ~${f.monthsAtPace.toFixed(1)} мес` : "Помесячные данные недоступны"}>
-                            Хватит на: <strong className="text-gray-300">~{f.monthsAtLimit.toFixed(1)} мес</strong> при лимите {fmt(MONTH_LIMIT)}
+                            Хватит на: <strong className="text-gray-300">~{f.monthsAtLimit.toFixed(1)} мес</strong> при лимите {fmt(f.futureMonthLimit)}
                             {f.monthsAtPace !== null && <> · <strong className="text-gray-300">~{f.monthsAtPace.toFixed(1)} мес</strong> по темпу</>}
                           </span>
                           <span className={f.inRedZone ? "text-rose-400 font-bold" : ""}>
