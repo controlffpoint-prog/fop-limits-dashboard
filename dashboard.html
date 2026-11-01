@@ -119,11 +119,15 @@
       const [filter, setFilter] = React.useState("all");
       const [sortOrder, setSortOrder] = React.useState("desc");
 
-      const [toast, setToast] = React.useState({ show: false, message: "" });
+      const [toast, setToast] = React.useState({ show: false, message: "", type: "ok" });
 
-      const showToast = (message) => {
-        setToast({ show: true, message });
-        setTimeout(() => setToast({ show: false, message: "" }), 2500);
+      // Какие ФОП сейчас сохраняются (пока идёт запись, кнопки этого ФОП заблокированы)
+      const [savingAuth, setSavingAuth] = React.useState({});
+      const savingCount = React.useRef(0);   // пока >0, автообновление не затирает только что нажатую отметку
+
+      const showToast = (message, type = "ok") => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: "", type: "ok" }), type === "error" ? 4500 : 2500);
       };
 
       const copyToClipboard = (text, label) => {
@@ -140,7 +144,7 @@
           const response = await fetch(`${BASE_API_URL}?token=${encodeURIComponent(token)}`);
           const result = await response.json();
           if (result && result.status === "success" && Array.isArray(result.data)) {
-            setFops(result.data);
+            if (savingCount.current === 0) setFops(result.data);
             setLastSync(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
             setFetchError("");
             return result;
@@ -161,6 +165,50 @@
         } finally {
           setLoading(false);
           if (manual) setIsSyncing(false);
+        }
+      };
+
+      // Ключ ФОП для блокировки кнопок: по ИНН, а если его нет — по названию
+      const authKeyOf = (f) => (f.inn && f.inn !== "Не указан") ? f.inn : f.name;
+
+      // Отметка «Авторизован / Не авторизован»: value = "yes" | "no" | "clear".
+      // Сайт сразу показывает новый статус, а Apps Script записывает его в колонку T
+      // напротив названия ФОП. Если запись не удалась — статус возвращается назад.
+      const setAuthorized = async (f, value) => {
+        const key = authKeyOf(f);
+        if (savingAuth[key]) return;
+        const prev = f.authorized === undefined ? null : f.authorized;
+        const next = value === "yes" ? true : value === "no" ? false : null;
+        if (prev === next) return;
+
+        const applyTo = (v) => setFops(list => list.map(x => (x.name === f.name && x.inn === f.inn) ? { ...x, authorized: v } : x));
+
+        savingCount.current += 1;
+        setSavingAuth(s => ({ ...s, [key]: true }));
+        applyTo(next);
+        try {
+          // Без заголовка Content-Type запрос остаётся «простым» (text/plain) — браузер не делает preflight
+          const response = await fetch(BASE_API_URL, {
+            method: "POST",
+            body: JSON.stringify({ token: authToken, action: "setAuth", name: f.name, inn: f.inn, value })
+          });
+          const result = await response.json();
+          if (result && result.status === "success") {
+            showToast(next === true ? "Отмечено: авторизован" : next === false ? "Отмечено: не авторизован" : "Отметка снята");
+          } else if (result && result.error === "Unauthorized") {
+            applyTo(prev);
+            sessionStorage.removeItem("fop_token");
+            setAuthToken("");
+            setFetchError("Сессия истекла, войдите заново");
+          } else {
+            throw new Error((result && result.message) || "Ошибка записи в таблицу");
+          }
+        } catch (err) {
+          applyTo(prev);
+          showToast("Не удалось записать в таблицу: " + (err && err.message ? err.message : "нет соединения"), "error");
+        } finally {
+          savingCount.current -= 1;
+          setSavingAuth(s => { const n = { ...s }; delete n[key]; return n; });
         }
       };
 
@@ -325,8 +373,8 @@
           {/* TOAST NOTIFICATION */}
           {toast.show && (
             <div className="fixed bottom-6 right-6 z-50 animate-toast">
-              <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-sm font-medium">
-                <i className="fa-solid fa-circle-check"></i>
+              <div className={`${toast.type === "error" ? "bg-rose-600" : "bg-emerald-600"} text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-sm font-medium max-w-sm`}>
+                <i className={`fa-solid ${toast.type === "error" ? "fa-triangle-exclamation" : "fa-circle-check"}`}></i>
                 <span>{toast.message}</span>
               </div>
             </div>
@@ -552,7 +600,38 @@
                         </div>
 
                         <div className="text-[10px] text-gray-500">
-                          {f.openDate ? `Открыт: ${f.openDate.toLocaleDateString("ru-RU")}` : "Дата открытия не указана"}
+                          {f.openDate ? `Зарегистрирован: ${f.openDate.toLocaleDateString("ru-RU")}` : "Дата регистрации не указана"}
+                        </div>
+
+                        {/* Авторизация ФОП: отметка пишется в колонку T таблицы */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <div className="inline-flex rounded-lg border border-cardBorder overflow-hidden text-[10px] font-bold" role="group" aria-label="Авторизация ФОП">
+                            <button
+                              type="button"
+                              disabled={!!savingAuth[authKeyOf(f)]}
+                              onClick={() => setAuthorized(f, f.authorized === true ? "clear" : "yes")}
+                              title={f.authorized === true ? "Нажмите ещё раз, чтобы снять отметку" : "Отметить: авторизован"}
+                              className={`px-2.5 py-1 flex items-center gap-1 transition disabled:opacity-60 ${f.authorized === true ? "bg-emerald-500/20 text-emerald-300" : "bg-gray-900/90 text-gray-500 hover:text-emerald-300"}`}
+                            >
+                              <i className="fa-solid fa-circle-check"></i>
+                              <span>Авторизован</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!!savingAuth[authKeyOf(f)]}
+                              onClick={() => setAuthorized(f, f.authorized === false ? "clear" : "no")}
+                              title={f.authorized === false ? "Нажмите ещё раз, чтобы снять отметку" : "Отметить: не авторизован"}
+                              className={`px-2.5 py-1 flex items-center gap-1 border-l border-cardBorder transition disabled:opacity-60 ${f.authorized === false ? "bg-rose-500/20 text-rose-300" : "bg-gray-900/90 text-gray-500 hover:text-rose-300"}`}
+                            >
+                              <i className="fa-solid fa-circle-xmark"></i>
+                              <span>Не авторизован</span>
+                            </button>
+                          </div>
+                          {savingAuth[authKeyOf(f)]
+                            ? <i className="fa-solid fa-spinner fa-spin text-brand text-xs"></i>
+                            : (f.authorized === true || f.authorized === false)
+                              ? null
+                              : <span className="text-[10px] text-gray-600">не отмечено</span>}
                         </div>
 
                         {/* Чипсы банков */}
