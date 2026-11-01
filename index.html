@@ -319,14 +319,17 @@
           const banks = item.banks || item.bank || "—";
 
           // --- Дата открытия и статус «Новостворений» (первый месяц работы) ---
-          let openDate = null, newUntil = null, isNew = false;
+          // Дата в таблице («Дата реєстрації») — это уже дата, с которой ФОП вступил в силу, сдвигать её не нужно.
+          // Первый месяц работы — календарный месяц этой даты (лимит 600 000); со следующего месяца — 1 500 000.
+          // Если дата ещё в будущем, ФОП тоже считается новоствореным.
+          let openDate = null, newUntil = null, newLastDay = null, isNew = false;
           if (item.openDate) {
             const d = new Date(item.openDate + "T00:00:00");
             if (!isNaN(d.getTime())) openDate = d;
           }
           if (openDate) {
-            newUntil = new Date(openDate);
-            newUntil.setMonth(newUntil.getMonth() + 1);
+            newUntil = new Date(openDate.getFullYear(), openDate.getMonth() + 1, 1);   // с этого дня действует обычный лимит
+            newLastDay = new Date(newUntil.getTime() - 86400000);                      // последний день первого месяца
             isNew = now < newUntil;
           }
 
@@ -348,9 +351,11 @@
           const monthLimit = limitIsCustom ? customLimit : (isNew ? NEW_MONTH_LIMIT : MONTH_LIMIT);
           const futureMonthLimit = limitIsCustom ? customLimit : MONTH_LIMIT;   // для оставшихся месяцев года и прогноза
           const monthly = Array.isArray(item.monthly) ? item.monthly : null;
-          const monthUsed = monthly ? (Number(monthly[curMonth]) || 0) : null;
+          const monthUsed = monthly ? (Number(monthly[curMonth]) || 0) : null;   // приход за текущий календарный месяц
+
           const monthFreeRaw = monthUsed === null ? monthLimit : Math.max(0, monthLimit - monthUsed);
           const monthPct = monthUsed === null ? null : Math.min(100, Math.round((monthUsed / monthLimit) * 100));
+          const monthOver = monthUsed === null ? 0 : Math.max(0, monthUsed - monthLimit);   // сколько сверх месячного лимита
 
           // Сколько ФОП реально может ещё принять: не больше месячного остатка и не больше годового
           const monthFree = Math.max(0, Math.min(remaining, monthFreeRaw));
@@ -380,7 +385,7 @@
 
           return {
             ...item, turnover, pct, remaining, banks, cat, label, badge, bar,
-            openDate, lastCheck, daysSinceCheck, isNew, newUntil, monthLimit, limitIsCustom, futureMonthLimit, monthUsed, monthPct, monthFree,
+            openDate, newLastDay, lastCheck, daysSinceCheck, isNew, newUntil, monthLimit, limitIsCustom, futureMonthLimit, monthUsed, monthPct, monthOver, monthFree,
             canReceiveYear, monthsAtLimit, monthsAtPace, toRed, inRedZone
           };
         });
@@ -667,14 +672,16 @@
                             )}
                           </button>
                           {f.isNew && (
-                            <span title={`Первый месяц работы до ${f.newUntil.toLocaleDateString("ru-RU")}`} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand/10 text-brand border border-brand/30">
+                            <span title={`Первый месяц работы: лимит ${new Intl.NumberFormat("ru-RU").format(NEW_MONTH_LIMIT)} ₴ действует до ${f.newLastDay.toLocaleDateString("ru-RU")}`} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand/10 text-brand border border-brand/30">
                               Новостворений
                             </span>
                           )}
                         </div>
 
                         <div className="text-[10px] text-gray-500">
-                          {f.openDate ? `Зарегистрирован: ${f.openDate.toLocaleDateString("ru-RU")}` : "Дата регистрации не указана"}
+                          {f.openDate
+                            ? `Зарегистрирован: ${f.openDate.toLocaleDateString("ru-RU")}${(f.isNew && !f.limitIsCustom) ? ` · ${new Intl.NumberFormat("ru-RU").format(NEW_MONTH_LIMIT)} до ${f.newLastDay.toLocaleDateString("ru-RU")}` : ""}`
+                            : "Дата регистрации не указана"}
                         </div>
                         <div className="text-[10px] text-gray-500" title="Число над названием месяца в таблице — когда последний раз проверяли счёт">
                           {f.lastCheck
@@ -752,6 +759,11 @@
                             {f.monthPct === null ? "" : `${f.monthPct}%`}
                           </span>
                         </div>
+                        {f.monthOver > 0 && (
+                          <div className="text-[11px] font-bold text-rose-400 pt-0.5">
+                            ⚠️ Превышение месячного лимита: +{new Intl.NumberFormat("ru-RU").format(f.monthOver)} ₴
+                          </div>
+                        )}
                         {limitEdit && limitEdit.key === authKeyOf(f) && (
                           <div className="flex flex-wrap items-center gap-1.5 pt-1">
                             <input
