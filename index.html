@@ -271,6 +271,17 @@
             isNew = now < newUntil;
           }
 
+          // --- Дата последней проверки счёта (число над названием месяца в таблице) ---
+          let lastCheck = null, daysSinceCheck = null;
+          if (item.lastCheck) {
+            const lc = new Date(item.lastCheck + "T00:00:00");
+            if (!isNaN(lc.getTime())) {
+              lastCheck = lc;
+              const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              daysSinceCheck = Math.max(0, Math.round((today0 - lc) / 86400000));
+            }
+          }
+
           // --- Месячный лимит и приход за текущий месяц ---
           const monthLimit = isNew ? NEW_MONTH_LIMIT : MONTH_LIMIT;
           const monthly = Array.isArray(item.monthly) ? item.monthly : null;
@@ -306,7 +317,7 @@
 
           return {
             ...item, turnover, pct, remaining, banks, cat, label, badge, bar,
-            openDate, isNew, newUntil, monthLimit, monthUsed, monthPct, monthFree,
+            openDate, lastCheck, daysSinceCheck, isNew, newUntil, monthLimit, monthUsed, monthPct, monthFree,
             canReceiveYear, monthsAtLimit, monthsAtPace, toRed, inRedZone
           };
         });
@@ -601,6 +612,11 @@
 
                         <div className="text-[10px] text-gray-500">
                           {f.openDate ? `Зарегистрирован: ${f.openDate.toLocaleDateString("ru-RU")}` : "Дата регистрации не указана"}
+                        </div>
+                        <div className="text-[10px] text-gray-500" title="Число над названием месяца в таблице — когда последний раз проверяли счёт">
+                          {f.lastCheck
+                            ? <>Счёт проверен: <strong className="text-gray-300">{f.lastCheck.toLocaleDateString("ru-RU")}</strong>{f.daysSinceCheck === 0 ? " (сегодня)" : ` (${f.daysSinceCheck} дн. назад)`}</>
+                            : "Дата проверки счёта не указана"}
                         </div>
 
                         {/* Авторизация ФОП: отметка пишется в колонку T таблицы */}
